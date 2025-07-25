@@ -1,0 +1,1230 @@
+﻿@using System.IdentityModel.Tokens.Jwt
+@using DrugUserPreventionUI.Pages
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Drug User Prevention System</title>
+
+    <!-- ✅ Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- ✅ Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- ✅ Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ✅ Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DrugUserPreventionUI.styles.css" asp-append-version="true" />
+
+    <!-- ✅ Favicon -->
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+
+    <style>
+        /* ✅ Global Styles */
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --border-radius: 0.5rem;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
+            --sidebar-transition: 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f8fafc;
+        }
+
+        /* ✅ Layout Structure */
+        .layout-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            transition: margin-left var(--sidebar-transition);
+        }
+
+        .main-content.with-sidebar {
+            margin-left: var(--sidebar-width);
+        }
+
+        /* ✅ Enhanced Navbar */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+            box-shadow: var(--box-shadow);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem !important;
+            border-radius: var(--border-radius);
+            margin: 0 0.25rem;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .navbar-nav .nav-link.active {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+
+        .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* ✅ Sidebar Styles */
+        .dashboard-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, var(--dark-color) 0%, #374151 100%);
+            color: white;
+            z-index: 1040;
+            transform: translateX(-100%);
+            transition: transform var(--sidebar-transition);
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-sidebar.show {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .sidebar-user {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .sidebar-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .sidebar-section-title {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary-color);
+        }
+
+        .sidebar-nav-link.active {
+            color: white;
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: var(--primary-color);
+        }
+
+        .sidebar-nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+            text-align: center;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1035;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ✅ Role-specific sidebar colors */
+        .sidebar-manager {
+            background: linear-gradient(180deg, #7c3aed 0%, #8b5cf6 100%);
+        }
+
+        .sidebar-staff {
+            background: linear-gradient(180deg, #0284c7 0%, #0ea5e9 100%);
+        }
+
+        .sidebar-consultant {
+            background: linear-gradient(180deg, #059669 0%, #10b981 100%);
+        }
+
+        .sidebar-member {
+            background: linear-gradient(180deg, #65a30d 0%, #84cc16 100%);
+        }
+
+        /* ✅ Role Badge */
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .role-badge.admin {
+            background-color: #dc2626;
+        }
+
+        .role-badge.manager {
+            background-color: #7c3aed;
+        }
+
+        .role-badge.consultant {
+            background-color: #059669;
+        }
+
+        .role-badge.staff {
+            background-color: #0284c7;
+        }
+
+        .role-badge.member {
+            background-color: #65a30d;
+        }
+
+        /* ✅ User Info Dropdown */
+        .user-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 0.5rem 1rem;
+            color: white;
+        }
+
+        .user-info .dropdown-toggle::after {
+            display: none;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+            margin-top: 0.5rem;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .dropdown-divider {
+            margin: 0.5rem 0;
+        }
+
+        /* ✅ Enhanced Cards */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        /* ✅ Enhanced Buttons */
+        .btn {
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+        }
+
+        /* ✅ Enhanced Tables */
+        .table {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, var(--dark-color) 0%, #374151 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+            border: none;
+            padding: 1rem 0.75rem;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8fafc;
+            transform: scale(1.01);
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding: 1rem 0.75rem;
+            border-color: #e2e8f0;
+        }
+
+        /* ✅ Enhanced Alerts */
+        .alert {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-left-color: var(--success-color);
+        }
+
+        .alert-danger {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border-left-color: var(--danger-color);
+        }
+
+        .alert-info {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border-left-color: var(--info-color);
+        }
+
+        .alert-warning {
+            background-color: #fffbeb;
+            color: #92400e;
+            border-left-color: var(--warning-color);
+        }
+
+        /* ✅ Enhanced Footer */
+        .footer {
+            background: linear-gradient(135deg, var(--dark-color) 0%, #374151 100%);
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 3rem;
+            padding: 2rem 0;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: var(--primary-color);
+        }
+
+        /* ✅ Loading Animation */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        keyframes loading {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* ✅ Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        }
+
+        /* ✅ Responsive Design */
+        media (max-width: 768px) {
+            .container-fluid {
+                padding: 0 1rem;
+            }
+
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn-group .btn {
+                margin: 2px 0;
+                width: 100%;
+            }
+
+            .user-info {
+                margin-top: 0.5rem;
+            }
+
+            .main-content.with-sidebar {
+                margin-left: 0;
+            }
+
+            .dashboard-sidebar {
+                width: 100%;
+            }
+        }
+
+        media (min-width: 769px) {
+            .dashboard-sidebar {
+                transform: translateX(0);
+            }
+            
+            .sidebar-toggle {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    @{
+        // ✅ ADDED: Get user info from JWT token for role-based navigation
+        DrugUserPreventionUI.Pages.UserInfoDto currentUser = null;
+        string displayName = "Guest";
+        string userRole = "Guest";
+        bool isAuthenticated = false;
+
+        try
+        {
+            var token = Context.Request.Cookies["auth_token"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                if (handler.CanReadToken(token))
+                {
+                    var jsonToken = handler.ReadJwtToken(token);
+
+                    // Check if token is not expired
+                    if (jsonToken.ValidTo > DateTime.UtcNow)
+                    {
+                        isAuthenticated = true;
+                        currentUser = new DrugUserPreventionUI.Pages.UserInfoDto();
+
+                        foreach (var claim in jsonToken.Claims)
+                        {
+                            switch (claim.Type)
+                            {
+                                case "sub":
+                                case "userid":
+                                case "id":
+                                case "nameid":
+                                case "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier":
+                                    if (int.TryParse(claim.Value, out var userId))
+                                        currentUser.UserId = userId;
+                                    break;
+                                case "unique_name":
+                                case "username":
+                                case "name":
+                                case "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name":
+                                    currentUser.UserName = claim.Value;
+                                    break;
+                                case "email":
+                                    currentUser.Email = claim.Value;
+                                    break;
+                                case "role":
+                                case "http://schemas.microsoft.com/ws/2008/06/identity/claims/role":
+                                    var normalizedRole = claim.Value?.Trim().ToLower();
+                                    userRole = normalizedRole switch
+                                    {
+                                        "admin" or "administrator" => "Admin",
+                                        "manager" or "quản lý" => "Manager",
+                                        "consultant" or "chuyên viên tư vấn" or "tư vấn viên" => "Consultant",
+                                        "staff" or "nhân viên" => "Staff",
+                                        "member" or "thành viên" => "Member",
+                                        _ => "Guest"
+                                    };
+                                    currentUser.Role = userRole;
+                                    break;
+                                case "fullname":
+                                case "given_name":
+                                case "family_name":
+                                    currentUser.FullName = claim.Value;
+                                    break;
+                            }
+                        }
+
+                        currentUser.Expiration = jsonToken.ValidTo;
+                        displayName = currentUser.FullName ?? currentUser.UserName ?? "User";
+                    }
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // If any error occurs, treat as guest
+            isAuthenticated = false;
+            userRole = "Guest";
+            displayName = "Guest";
+            currentUser = null;
+        }
+
+        // Role permissions
+        bool isAdmin = userRole == "Admin";
+        bool isManager = userRole == "Manager";
+        bool isConsultant = userRole == "Consultant";
+        bool isStaff = userRole == "Staff";
+        bool isMember = userRole == "Member";
+        bool isGuest = userRole == "Guest" || !isAuthenticated;
+        
+        // Check if current page should show sidebar
+        bool showSidebar = isAuthenticated && (isManager || isStaff || isConsultant || isMember);
+        string currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+        bool isDashboardPage = currentPage.Contains("Dashboard") || currentPage.Contains("Management") || currentPage.Contains("MyCourses") || currentPage.Contains("CourseDashboard");
+    }
+
+    <div class="layout-wrapper">
+        <!-- ✅ SIDEBAR -->
+        @if (showSidebar && isDashboardPage)
+        {
+            <!-- Sidebar Toggle Button (Mobile) -->
+            <button class="sidebar-toggle d-md-none" type="button" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Sidebar Overlay (Mobile) -->
+            <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+            <!-- Sidebar -->
+            <nav class="dashboard-sidebar sidebar-@userRole.ToLower()" id="dashboardSidebar">
+                <div class="sidebar-header">
+@*                     <a href="/Index" class="sidebar-brand">
+                        <i class="fas fa-shield-heart me-2"></i>
+                        Drug Prevention
+                    </a> *@
+                    
+                    <div class="sidebar-user">
+                        <div class="d-flex align-items-center">
+                            <div class="sidebar-user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">@displayName</div>
+                                <small class="role-badge @userRole.ToLower()">@userRole</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-nav">
+                    <!-- MANAGER SIDEBAR -->
+                    @if (isManager)
+                    {
+                        <div class="sidebar-section-title">Quản lý chính</div>
+                        <a href="/ManagerDashboard/ManagerDashboard?action=pending-courses" class="sidebar-nav-link">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Duyệt khóa học</span>
+                        </a>
+                        <a href="/ManagerDashboard/ManagerDashboard?action=consultants" class="sidebar-nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Quản lý tài khoản</span>
+                        </a>
+                        <a href="/Programs" class="sidebar-nav-link">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>Quản lý chương trình</span>
+                        </a>
+                        <a href="/NewsActicles/NewsActicles?action=news" class="sidebar-nav-link">
+                            <i class="fas fa-newspaper"></i>
+                            <span>Quản lý tin tức</span>
+                        </a>
+                        <a href="/Calendar/Consultants" class="sidebar-nav-link">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Lịch Consultant</span>
+                        </a>
+                        <a href="/Reports" class="sidebar-nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Báo cáo</span>
+                        </a>
+                    }
+
+                    <!-- STAFF SIDEBAR -->
+                    @if (isStaff)
+                    {
+                        <div class="sidebar-section-title">Hỗ trợ quản lý</div>
+                        <a href="/Staff/StaffDashboard?section=members" class="sidebar-nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Quản lý tài khoản</span>
+                        </a>
+                        <a href="/CourseDashboard" class="sidebar-nav-link">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Cập nhật khóa học</span>
+                        </a>
+                        <a href="/Staff/StaffDashboard?section=news" class="sidebar-nav-link">
+                            <i class="fas fa-newspaper"></i>
+                            <span>Quản lý tin tức</span>
+                        </a>
+                        <a href="/Calendar/Consultants" class="sidebar-nav-link">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Lịch Consultant</span>
+                        </a>
+                    }
+
+                    <!-- CONSULTANT SIDEBAR -->
+                    @if (isConsultant)
+                    {
+                        <div class="sidebar-section-title">Quản lý cá nhân</div>
+                        <a href="/CourseDashboard" class="sidebar-nav-link">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Khóa học của tôi</span>
+                        </a>
+                        <a href="/News/My" class="sidebar-nav-link">
+                            <i class="fas fa-newspaper"></i>
+                            <span>Tin tức của tôi</span>
+                        </a>
+                        <a href="/Calendar/My" class="sidebar-nav-link">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Lịch của tôi</span>
+                        </a>
+                    }
+
+                    <!-- MEMBER SIDEBAR -->
+                    @if (isMember)
+                    {
+                        <div class="sidebar-section-title">Học tập</div>
+                        <a href="/MyCourses" class="sidebar-nav-link">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Khóa học đã đăng ký</span>
+                        </a>
+                        <a href="/MyPrograms" class="sidebar-nav-link">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>Chương trình đã đăng ký</span>
+                        </a>
+@*                         <a href="/Profile" class="sidebar-nav-link">
+                            <i class="fas fa-user-edit"></i>
+                            <span>Hồ sơ cá nhân</span>
+                        </a> *@
+                    }
+
+                    <!-- COMMON SIDEBAR -->
+@*                     <div class="sidebar-section-title">Cài đặt</div>
+                    <a href="/Profile" class="sidebar-nav-link">
+                        <i class="fas fa-user-cog"></i>
+                        <span>Tài khoản của tôi</span>
+                    </a>
+                    <form method="post" asp-page="/Login" asp-page-handler="Logout" style="display: inline;">
+                        <button type="submit" class="sidebar-nav-link border-0 bg-transparent w-100 text-start" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Đăng xuất</span>
+                        </button>
+                    </form> *@
+                </div>
+            </nav>
+        }
+
+        <!-- ✅ MAIN CONTENT -->
+        <div class="main-content @(showSidebar && isDashboardPage ? "with-sidebar" : "")">
+            <header>
+                <nav class="navbar navbar-expand-lg navbar-light border-bottom box-shadow mb-3">
+                    <div class="container">
+                        <a class="navbar-brand" asp-area="" asp-page="/Index">
+                            <i class="fas fa-shield-heart me-2"></i>
+                            Drug Prevention System
+                        </a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
+                            <ul class="navbar-nav flex-grow-1">
+                                <!-- ✅ COMMON NAVIGATION - Available for all users -->
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-page="/Index">
+                                        <i class="fas fa-home me-1"></i>
+                                        Trang chủ
+                                    </a>
+                                </li>
+
+                                @if (isAuthenticated)
+                                {
+                                    <!-- ✅ AUTHENTICATED USER NAVIGATION -->
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="" asp-page="/Courses/Courses">
+                                            <i class="fas fa-graduation-cap me-1"></i>
+                                            Khóa học
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="" asp-page="/Consultants/Consultants">
+                                            <i class="fas fa-user-md me-1"></i>
+                                            Chuyên gia
+                                        </a>
+                                    </li>
+@*                                     @if (isMember || isConsultant || isAdmin)
+                                    {
+                                        <li class="nav-item">
+                                            <a class="nav-link" asp-area="" asp-page="/MyCourses">
+                                                <i class="fas fa-user-graduate me-1"></i>
+                                                Khóa học của tôi
+                                            </a>
+                                        </li>
+                                    } *@
+                                    <!-- ✅ MANAGEMENT NAVIGATION -->
+                                   @if (isConsultant || isStaff || isManager)
+                                   {
+                                       <li class="nav-item dropdown">
+                                           <a class="nav-link dropdown-toggle" id="managementDropdown" role="button" data-bs-toggle="dropdown">
+                                               <i class="fas fa-cogs me-1"></i>
+                                               Quản lý
+                                           </a>
+                                           <ul class="dropdown-menu">
+                                               @if (isConsultant || isStaff || isManager)
+                                               {
+                                                   <li>
+                                                        <a class="dropdown-item" asp-area="" asp-page="/CourseDashboard/CourseDashboard">
+                                                           <i class="fas fa-graduation-cap me-2"></i>
+                                                           Quản lý Khóa học
+                                                       </a>
+                                                   </li>
+                                               }
+                                               @if (isStaff || isManager)
+                                               {
+                                                   <li>
+                                                       <a class="dropdown-item" asp-area="" asp-page="/UserManagement">
+                                                           <i class="fas fa-users me-2"></i>
+                                                           Quản lý Người dùng
+                                                       </a>
+                                                   </li>
+                                               }
+                                               @if (isManager)
+                                               {
+                                                   <li><hr class="dropdown-divider"></li>
+                                                   <li>
+                                                       <a class="dropdown-item" asp-area="" asp-page="/Reports">
+                                                           <i class="fas fa-chart-bar me-2"></i>
+                                                           Báo cáo
+                                                       </a>
+                                                   </li>
+                                               }
+                                           </ul>
+                                       </li>
+                                   }
+
+                                   <!-- ✅ ADMIN NAVIGATION -->
+                                   @if (isAdmin)
+                                   {
+                                       <li class="nav-item dropdown">
+                                           <a class="nav-link dropdown-toggle"  id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                               <i class="fas fa-shield-alt me-1"></i>
+                                               Quản trị
+                                           </a>
+                                           <ul class="dropdown-menu">
+                                               <li>
+                                                    <a class="dropdown-item" asp-area="" asp-page="/AdminDashboard/AdminDashboard">
+                                                       <i class="fas fa-tachometer-alt me-2"></i>
+                                                       Dashboard Admin
+                                                   </a>
+                                               </li>
+@*                                                <li>
+                                                   <a class="dropdown-item" asp-area="" asp-page="/Admin/SystemSettings">
+                                                       <i class="fas fa-cog me-2"></i>
+                                                       Cài đặt hệ thống
+                                                   </a>
+                                               </li> *@
+@*                                                <li>
+                                                   <a class="dropdown-item" asp-area="" asp-page="/Admin/UserRoles">
+                                                       <i class="fas fa-user-tag me-2"></i>
+                                                       Phân quyền
+                                                   </a>
+                                               </li> *@
+@*                                                <li><hr class="dropdown-divider"></li>
+                                               <li>
+                                                   <a class="dropdown-item" asp-area="" asp-page="/Admin/SystemLogs">
+                                                       <i class="fas fa-list-alt me-2"></i>
+                                                       System Logs
+                                                   </a>
+                                               </li> *@
+                                           </ul>
+                                       </li>
+                                   }
+                               }
+                               else
+                               {
+                                   <!-- ✅ GUEST NAVIGATION -->
+                                   <li class="nav-item">
+                                       <a class="nav-link" asp-area="" asp-page="/Courses">
+                                           <i class="fas fa-graduation-cap me-1"></i>
+                                           Khóa học
+                                       </a>
+                                   </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="" asp-page="/Consultants/Consultants">
+                                            <i class="fas fa-graduation-cap me-1"></i>
+                                            Chuyên gia
+                                        </a>
+                                    </li>
+                               }
+
+                               <!-- ✅ COMMON LINKS -->
+@*                                <li class="nav-item">
+                                   <a class="nav-link" asp-area="" asp-page="/Privacy">
+                                       <i class="fas fa-user-shield me-1"></i>
+                                       Quyền riêng tư
+                                   </a>
+                               </li> *@
+                           </ul>
+
+                           <!-- ✅ USER AUTHENTICATION SECTION -->
+                           <ul class="navbar-nav">
+                               @if (isAuthenticated && currentUser != null)
+                               {
+                                   <li class="nav-item dropdown">
+                                       <a class="nav-link dropdown-toggle user-info"  id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                           <i class="fas fa-user-circle me-2"></i>
+                                           <span class="d-none d-md-inline">@displayName</span>
+                                           <span class="role-badge @userRole.ToLower() ms-2">@userRole</span>
+                                       </a>
+                                       <ul class="dropdown-menu dropdown-menu-end">
+                                           <li>
+                                               <h6 class="dropdown-header">
+                                                   <i class="fas fa-user me-2"></i>
+                                                   @displayName
+                                               </h6>
+                                           </li>
+                                           <li>
+                                               <span class="dropdown-item-text small text-muted">
+                                                   @(currentUser?.Email ?? "")
+                                               </span>
+                                           </li>
+                                           <li><hr class="dropdown-divider"></li>
+                                           <li>
+                                               <a class="dropdown-item" asp-area="" asp-page="/Profile">
+                                                   <i class="fas fa-user-edit me-2"></i>
+                                                   Hồ sơ cá nhân
+                                               </a>
+                                           </li>
+@*                                            <li>
+                                               <a class="dropdown-item" asp-area="" asp-page="/Settings">
+                                                   <i class="fas fa-cog me-2"></i>
+                                                   Cài đặt
+                                               </a>
+                                           </li> *@
+                                           <li><hr class="dropdown-divider"></li>
+                                           <li>
+                                               <form method="post" asp-page="/Login" asp-page-handler="Logout" style="display: inline;">
+                                                   <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                                                       <i class="fas fa-sign-out-alt me-2"></i>
+                                                       Đăng xuất
+                                                   </button>
+                                               </form>
+                                           </li>
+                                       </ul>
+                                   </li>
+                               }
+                               else
+                               {
+                                   <li class="nav-item">
+                                       <a class="nav-link" asp-area="" asp-page="/Register">
+                                           <i class="fas fa-user-plus me-1"></i>
+                                           Đăng ký
+                                       </a>
+                                   </li>
+                                   <li class="nav-item">
+                                       <a class="nav-link" asp-area="" asp-page="/Login">
+                                           <i class="fas fa-sign-in-alt me-1"></i>
+                                           Đăng nhập
+                                       </a>
+                                   </li>
+                               }
+                           </ul>
+                       </div>
+                   </div>
+               </nav>
+           </header>
+
+           <!-- ✅ ROLE-BASED WELCOME MESSAGE -->
+           @if (isAuthenticated && !string.IsNullOrEmpty(ViewBag.ShowWelcome?.ToString()))
+           {
+               <div class="container-fluid">
+                   <div class="alert alert-info alert-dismissible fade show" role="alert">
+                       <i class="fas fa-info-circle me-2"></i>
+                       <strong>Chào mừng @displayName!</strong>
+                       Bạn đang đăng nhập với quyền <strong>@userRole</strong>.
+                       @switch (userRole)
+                       {
+                           case "Admin":
+                               <span>Bạn có quyền quản trị toàn hệ thống.</span>
+                               break;
+                           case "Manager":
+                               <span>Bạn có thể duyệt khóa học và quản lý báo cáo.</span>
+                               break;
+                           case "Consultant":
+                               <span>Bạn có thể tạo và quản lý khóa học.</span>
+                               break;
+                           case "Staff":
+                               <span>Bạn có thể hỗ trợ quản lý khóa học và người dùng.</span>
+                               break;
+                           case "Member":
+                               <span>Bạn có thể tham gia và theo dõi các khóa học.</span>
+                               break;
+                       }
+                       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                   </div>
+               </div>
+           }
+
+           <div class="container-fluid">
+               <main role="main" class="pb-3">
+                   @RenderBody()
+               </main>
+           </div>
+       </div> <!-- End main-content -->
+   </div> <!-- End layout-wrapper -->
+
+@*    <footer class="border-top footer text-muted">
+       <div class="container">
+           <div class="row">
+               <div class="col-md-6">
+                   <div class="d-flex align-items-center">
+                       <i class="fas fa-shield-heart me-2"></i>
+                       <span>&copy; 2025 - Drug User Prevention System</span>
+                   </div>
+                   @if (isAuthenticated)
+                   {
+                       <small class="text-muted">
+                           Đăng nhập với quyền: <strong>@userRole</strong>
+                       </small>
+                   }
+               </div>
+               <div class="col-md-6 text-md-end">
+                   <a asp-area="" asp-page="/Privacy" class="me-3">
+                       <i class="fas fa-user-shield me-1"></i>
+                       Quyền riêng tư
+                   </a>
+                   <a href="#" class="me-3">
+                       <i class="fas fa-phone me-1"></i>
+                       Liên hệ
+                   </a>
+                   <a href="#">
+                       <i class="fas fa-info-circle me-1"></i>
+                       Về chúng tôi
+                   </a>
+               </div>
+           </div>
+       </div>
+   </footer> *@
+
+   <!-- ✅ JavaScript Libraries -->
+   <script src="~/lib/jquery/dist/jquery.min.js"></script>
+   <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+   <!-- ✅ Additional Libraries -->
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+           integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+   <!-- ✅ Custom JavaScript -->
+   <script src="~/js/site.js" asp-append-version="true"></script>
+
+   <script>
+       // ✅ Global JavaScript Functions
+       $(document).ready(function() {
+           // Auto-dismiss alerts after 8 seconds
+           setTimeout(function() {
+               $('.alert:not(.alert-info)').fadeOut('slow');
+           }, 8000);
+
+           // Add loading animation to buttons on form submit
+           $('form').on('submit', function() {
+               $(this).find('button[type="submit"]').addClass('loading').prop('disabled', true);
+           });
+
+           // Smooth scrolling for anchor links
+           $('a[href^="#"]').on('click', function(event) {
+               var target = $(this.getAttribute('href'));
+               if( target.length ) {
+                   event.preventDefault();
+                   $('html, body').stop().animate({
+                       scrollTop: target.offset().top - 100
+                   }, 1000);
+               }
+           });
+
+           // Tooltip initialization
+           var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+           var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+               return new bootstrap.Tooltip(tooltipTriggerEl);
+           });
+
+           // Enhance table responsiveness
+           $('.table-responsive').on('scroll', function() {
+               if ($(this).scrollLeft() > 0) {
+                   $(this).addClass('scrolled');
+               } else {
+                   $(this).removeClass('scrolled');
+               }
+           });
+
+           // ✅ Role-based UI enhancements
+           const userRole = '@userRole';
+           if (userRole) {
+               $('body').addClass('role-' + userRole.toLowerCase());
+           }
+
+           // Initialize sidebar
+           handleSidebarResponsive();
+           setActiveSidebarLink();
+
+           // Handle window resize
+           $(window).resize(function() {
+               handleSidebarResponsive();
+           });
+       });
+
+       // ✅ Utility Functions
+       function showToast(message, type = 'info') {
+           const toastHtml = `
+               <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                   <div class="d-flex">
+                       <div class="toast-body">${message}</div>
+                       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                   </div>
+               </div>
+           `;
+
+           let toastContainer = $('#toast-container');
+           if (toastContainer.length === 0) {
+               $('body').append('<div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3"></div>');
+               toastContainer = $('#toast-container');
+           }
+
+           const toastElement = $(toastHtml);
+           toastContainer.append(toastElement);
+
+           const toast = new bootstrap.Toast(toastElement[0]);
+           toast.show();
+
+           toastElement.on('hidden.bs.toast', function () {
+               $(this).remove();
+           });
+       }
+
+       function confirmAction(message, callback) {
+           if (confirm(message)) {
+               callback();
+           }
+       }
+   </script>
+
+   <script>
+       // ✅ Sidebar Functions
+       function toggleSidebar() {
+           const sidebar = document.getElementById('dashboardSidebar');
+           const overlay = document.querySelector('.sidebar-overlay');
+           
+           sidebar.classList.toggle('show');
+           overlay.classList.toggle('show');
+       }
+
+       function closeSidebar() {
+           const sidebar = document.getElementById('dashboardSidebar');
+           const overlay = document.querySelector('.sidebar-overlay');
+           
+           sidebar.classList.remove('show');
+           overlay.classList.remove('show');
+       }
+
+       // ✅ Auto-show sidebar on desktop
+       function handleSidebarResponsive() {
+           const sidebar = document.getElementById('dashboardSidebar');
+           const overlay = document.querySelector('.sidebar-overlay');
+           
+           if (window.innerWidth >= 768 && sidebar) {
+               sidebar.classList.add('show');
+               if (overlay) overlay.classList.remove('show');
+           }
+       }
+
+       // ✅ Set active sidebar link
+       function setActiveSidebarLink() {
+           const currentPath = window.location.pathname;
+           const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
+           
+           sidebarLinks.forEach(link => {
+               const href = link.getAttribute('href');
+               if (href && currentPath.includes(href)) {
+                   link.classList.add('active');
+               }
+           });
+       }
+   </script>
+  
+   @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

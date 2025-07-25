@@ -1,0 +1,765 @@
+﻿@page "/Courses"
+@model DrugUserPreventionUI.Pages.Courses.CoursesModel
+@{
+    ViewData["Title"] = "Khóa học phòng chống tệ nạn xã hội";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+    
+    int currentPage = ViewData["CurrentPage"] as int? ?? 1;
+    int totalPages = ViewData["TotalPages"] as int? ?? 1;
+    int totalItems = ViewData["TotalItems"] as int? ?? 0;
+    bool hasPrevious = currentPage > 1;
+    bool hasNext = currentPage < totalPages;
+}
+
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="hero-section mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 fw-bold text-primary mb-3">
+                    <i class="fas fa-graduation-cap me-3"></i>
+                    Khóa học phòng chống tệ nạn xã hội
+                </h1>
+                <p class="lead text-muted mb-4">
+                    Khám phá các khóa học chất lượng cao được thiết kế để nâng cao nhận thức và kỹ năng phòng chống tệ nạn xã hội
+                </p>
+                @if (Model.IsAuthenticated)
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-user-circle me-2"></i>
+                        Xin chào <strong>@Model.UserName</strong> (<span class="text-primary">@Model.UserRole</span>)
+                    </div>
+                }
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="stats-card">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary mb-1">@totalItems</h3>
+                            <p class="text-muted mb-0">Khóa học có sẵn</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.MessageType == "success" ? "success" : Model.MessageType == "error" ? "danger" : "info") alert-dismissible fade show" role="alert">
+            <i class="fas fa-@(Model.MessageType == "success" ? "check-circle" : Model.MessageType == "error" ? "exclamation-triangle" : "info-circle") me-2"></i>
+            @Model.Message
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Course Detail View -->
+    @if (Model.CurrentAction == "detail" && Model.CourseDetail != null)
+    {
+        <div class="course-detail-section mb-5">
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/Courses">Khóa học</a></li>
+                            <li class="breadcrumb-item active">@Model.CourseDetail.Title</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg">
+                <div class="row g-0">
+                    <div class="col-md-5">
+                        @if (!string.IsNullOrEmpty(Model.CourseDetail.ThumbnailURL))
+                        {
+                            <img src="@Model.CourseDetail.ThumbnailURL" class="img-fluid h-100 object-cover rounded-start" alt="@Model.CourseDetail.Title" />
+                        }
+                        else
+                        {
+                            <div class="bg-gradient-primary d-flex align-items-center justify-content-center h-100 rounded-start">
+                                <i class="fas fa-graduation-cap fa-5x text-white opacity-50"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-7">
+                        <div class="card-body p-5">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div>
+                                    <h2 class="card-title mb-3">@Model.CourseDetail.Title</h2>
+                                    <div class="course-badges mb-3">
+                                        <span class="badge @(Model.CourseDetail.IsActive ? "bg-success" : "bg-secondary") me-2">
+                                            <i class="fas @(Model.CourseDetail.IsActive ? "fa-play" : "fa-pause") me-1"></i>
+                                            @(Model.CourseDetail.IsActive ? "Đang mở" : "Tạm dừng")
+                                        </span>
+                                        <span class="badge @(Model.CourseDetail.IsAccept ? "bg-info" : "bg-warning") me-2">
+                                            <i class="fas @(Model.CourseDetail.IsAccept ? "fa-check" : "fa-clock") me-1"></i>
+                                            @(Model.CourseDetail.IsAccept ? "Đã duyệt" : "Chờ duyệt")
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="/Courses" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>
+                                    Quay lại
+                                </a>
+                            </div>
+
+                            <p class="card-text text-muted mb-4">@Model.CourseDetail.Description</p>
+
+                            <div class="course-info row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <div class="info-item">
+                                        <i class="fas fa-users text-primary me-2"></i>
+                                        <strong>Đối tượng:</strong> @Model.CourseDetail.TargetGroup
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="info-item">
+                                        <i class="fas fa-child text-primary me-2"></i>
+                                        <strong>Độ tuổi:</strong> @Model.CourseDetail.AgeGroup
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="info-item">
+                                        <i class="fas fa-calendar text-primary me-2"></i>
+                                        <strong>Ngày tạo:</strong> @Model.CourseDetail.CreatedAt.ToString("dd/MM/yyyy")
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="info-item">
+                                        <i class="fas fa-user-tie text-primary me-2"></i>
+                                        <strong>Người tạo:</strong> @(Model.CourseDetail.CreatorName ?? "N/A")
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="info-item">
+                                        <i class="fas fa-book text-primary me-2"></i>
+                                        <strong>Số bài học:</strong> @Model.CourseDetail.TotalContents
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="info-item">
+                                        <i class="fas fa-user-graduate text-primary me-2"></i>
+                                        <strong>Đã đăng ký:</strong> @Model.CourseDetail.TotalRegistrations người
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.CourseDetail.ContentURL))
+                            {
+                                <div class="mb-4">
+                                    <a href="@Model.CourseDetail.ContentURL" target="_blank" class="btn btn-outline-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i>
+                                        Xem nội dung khóa học
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Registration Actions -->
+                            @if (Model.IsAuthenticated && Model.CourseDetail.IsActive && Model.CourseDetail.IsAccept)
+                            {
+                                <div class="registration-actions">
+                                    @{
+                                        bool isRegistered = await Model.IsUserRegisteredForCourse(Model.CourseDetail.CourseID);
+                                    }
+                                    
+                                    @if (isRegistered)
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <a href="/Courses/View/@Model.CourseDetail.CourseID" class="btn btn-success btn-lg">
+                                                <i class="fas fa-play me-2"></i>
+                                                Vào học
+                                            </a>
+                                            <form method="post" asp-page-handler="Unregister">
+                                                <input type="hidden" name="courseId" value="@Model.CourseDetail.CourseID" />
+                                                <button type="submit" class="btn btn-warning" onclick="return confirm('Bạn có chắc muốn hủy đăng ký khóa học này?')">
+                                                    <i class="fas fa-user-minus me-1"></i>
+                                                    Hủy đăng ký
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-page-handler="Register">
+                                            <input type="hidden" name="courseId" value="@Model.CourseDetail.CourseID" />
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="fas fa-user-plus me-2"></i>
+                                                Đăng ký ngay
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            }
+                            else if (!Model.IsAuthenticated)
+                            {
+                                <div class="registration-actions">
+                                    <a href="/Login" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Đăng nhập để đăng ký
+                                    </a>
+                                </div>
+                            }
+                            else if (!Model.CourseDetail.IsActive)
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-pause-circle me-2"></i>
+                                    Khóa học hiện đang tạm dừng
+                                </div>
+                            }
+                            else if (!Model.CourseDetail.IsAccept)
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Khóa học đang chờ phê duyệt
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Course List View -->
+    @if (string.IsNullOrEmpty(Model.CurrentAction) || Model.CurrentAction == "list")
+    {
+        <!-- Search and Filter Section -->
+        <div class="search-filter-section mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                <i class="fas fa-search me-1"></i>
+                                Tìm kiếm
+                            </label>
+                            <input type="text" name="searchKeyword" class="form-control" placeholder="Tên khóa học, mô tả..." value="@Model.FilterModel.SearchKeyword" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                <i class="fas fa-users me-1"></i>
+                                Đối tượng
+                            </label>
+                            <select name="targetGroup" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="Học sinh" selected="@(Model.FilterModel.TargetGroup == "Học sinh")">Học sinh</option>
+                                <option value="Sinh viên" selected="@(Model.FilterModel.TargetGroup == "Sinh viên")">Sinh viên</option>
+                                <option value="Người lao động" selected="@(Model.FilterModel.TargetGroup == "Người lao động")">Người lao động</option>
+                                <option value="Phụ huynh" selected="@(Model.FilterModel.TargetGroup == "Phụ huynh")">Phụ huynh</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                <i class="fas fa-child me-1"></i>
+                                Độ tuổi
+                            </label>
+                            <select name="ageGroup" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="6-12" selected="@(Model.FilterModel.AgeGroup == "6-12")">6-12 tuổi</option>
+                                <option value="13-18" selected="@(Model.FilterModel.AgeGroup == "13-18")">13-18 tuổi</option>
+                                <option value="18-25" selected="@(Model.FilterModel.AgeGroup == "18-25")">18-25 tuổi</option>
+                                <option value="25+" selected="@(Model.FilterModel.AgeGroup == "25+")">Trên 25 tuổi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                <i class="fas fa-toggle-on me-1"></i>
+                                Trạng thái
+                            </label>
+                            <select name="isActive" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="true" selected="@(Model.FilterModel.IsActive == true)">Đang mở</option>
+                                <option value="false" selected="@(Model.FilterModel.IsActive == false)">Tạm dừng</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>
+                                    Tìm kiếm
+                                </button>
+                                <a href="/Courses" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo me-1"></i>
+                                    Đặt lại
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Grid -->
+        @if (Model.Courses.Any())
+        {
+            <div class="course-grid">
+                <div class="row g-4">
+                    @foreach (var course in Model.Courses)
+                    {
+                        <div class="col-lg-4 col-md-6">
+                            <div class="course-card card border-0 shadow-sm h-100">
+                                <div class="course-image">
+                                    @if (!string.IsNullOrEmpty(course.ThumbnailUrl))
+                                    {
+                                        <img src="@course.ThumbnailUrl" class="card-img-top" alt="@course.Title" style="height: 200px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="placeholder-image bg-gradient-primary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                            <i class="fas fa-graduation-cap fa-3x text-white opacity-50"></i>
+                                        </div>
+                                    }
+                                    
+                                    <!-- Course Status Badges -->
+                                    <div class="course-badges position-absolute top-0 end-0 m-2">
+                                        <span class="badge @(course.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(course.IsActive ? "Đang mở" : "Tạm dừng")
+                                        </span>
+                                        @if (course.IsAccept)
+                                        {
+                                            <span class="badge bg-info ms-1">Đã duyệt</span>
+                                        }
+                                    </div>
+                                </div>
+                                
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">@course.Title</h5>
+                                    <p class="card-text text-muted flex-grow-1">
+                                        @(course.Description?.Length > 100 ? course.Description.Substring(0, 100) + "..." : course.Description)
+                                    </p>
+                                    
+                                    <div class="course-meta mb-3">
+                                        <div class="row text-sm">
+                                            <div class="col-6">
+                                                <i class="fas fa-users text-primary me-1"></i>
+                                                <small>@course.TargetGroup</small>
+                                            </div>
+                                            <div class="col-6">
+                                                <i class="fas fa-child text-primary me-1"></i>
+                                                <small>@course.AgeGroup</small>
+                                            </div>
+                                        </div>
+                                        <div class="row text-sm mt-1">
+                                            <div class="col-6">
+                                                <i class="fas fa-calendar text-primary me-1"></i>
+                                                <small>@course.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                            </div>
+                                            <div class="col-6">
+                                                <i class="fas fa-user-graduate text-primary me-1"></i>
+                                                <small>@course.TotalRegistrations người</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="course-actions d-flex gap-2">
+                                        <a href="?action=detail&id=@course.CourseID" class="btn btn-outline-primary flex-grow-1">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Xem chi tiết
+                                        </a>
+                                        
+                                        @if (Model.IsAuthenticated && course.IsActive && course.IsAccept)
+                                        {                                            
+                                                bool isRegistered = await Model.IsUserRegisteredForCourse(course.CourseID);
+                                            
+                                            
+                                            if (isRegistered)
+                                            {
+                                                <div class="d-flex gap-1 flex-grow-1">
+                                                    <a href="/Courses/View/@course.CourseID" class="btn btn-success flex-grow-1">
+                                                        <i class="fas fa-play me-1"></i>
+                                                        Học
+                                                    </a>
+                                                    <form method="post" asp-page-handler="Unregister">
+                                                        <input type="hidden" name="courseId" value="@course.CourseID" />
+                                                        <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Hủy đăng ký?')" title="Hủy đăng ký">
+                                                            <i class="fas fa-user-minus"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <form method="post" asp-page-handler="Register" class="flex-grow-1">
+                                                    <input type="hidden" name="courseId" value="@course.CourseID" />
+                                                    <button type="submit" class="btn btn-success w-100">
+                                                        <i class="fas fa-user-plus me-1"></i>
+                                                        Đăng ký
+                                                    </button>
+                                                </form>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            @if (totalPages > 1)
+            {
+                <nav aria-label="Course pagination" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(hasPrevious ? "" : "disabled")">
+                            <a class="page-link" href="?pageIndex=@(currentPage - 1)@(string.IsNullOrEmpty(Model.FilterModel.SearchKeyword) ? "" : "&searchKeyword=" + Uri.EscapeDataString(Model.FilterModel.SearchKeyword))@(string.IsNullOrEmpty(Model.FilterModel.TargetGroup) ? "" : "&targetGroup=" + Uri.EscapeDataString(Model.FilterModel.TargetGroup))@(string.IsNullOrEmpty(Model.FilterModel.AgeGroup) ? "" : "&ageGroup=" + Uri.EscapeDataString(Model.FilterModel.AgeGroup))@(Model.FilterModel.IsActive.HasValue ? "&isActive=" + Model.FilterModel.IsActive.Value : "")@(Model.FilterModel.FromDate.HasValue ? "&startDate=" + Model.FilterModel.FromDate.Value.ToString("yyyy-MM-dd") : "")@(Model.FilterModel.ToDate.HasValue ? "&endDate=" + Model.FilterModel.ToDate.Value.ToString("yyyy-MM-dd") : "")" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        
+                        @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" href="?pageIndex=@i@(string.IsNullOrEmpty(Model.FilterModel.SearchKeyword) ? "" : "&searchKeyword=" + Uri.EscapeDataString(Model.FilterModel.SearchKeyword))@(string.IsNullOrEmpty(Model.FilterModel.TargetGroup) ? "" : "&targetGroup=" + Uri.EscapeDataString(Model.FilterModel.TargetGroup))@(string.IsNullOrEmpty(Model.FilterModel.AgeGroup) ? "" : "&ageGroup=" + Uri.EscapeDataString(Model.FilterModel.AgeGroup))@(Model.FilterModel.IsActive.HasValue ? "&isActive=" + Model.FilterModel.IsActive.Value : "")@(Model.FilterModel.FromDate.HasValue ? "&startDate=" + Model.FilterModel.FromDate.Value.ToString("yyyy-MM-dd") : "")@(Model.FilterModel.ToDate.HasValue ? "&endDate=" + Model.FilterModel.ToDate.Value.ToString("yyyy-MM-dd") : "")">@i</a>
+                            </li>
+                        }
+                        
+                        <li class="page-item @(hasNext ? "" : "disabled")">
+                            <a class="page-link" href="?pageIndex=@(currentPage + 1)@(string.IsNullOrEmpty(Model.FilterModel.SearchKeyword) ? "" : "&searchKeyword=" + Uri.EscapeDataString(Model.FilterModel.SearchKeyword))@(string.IsNullOrEmpty(Model.FilterModel.TargetGroup) ? "" : "&targetGroup=" + Uri.EscapeDataString(Model.FilterModel.TargetGroup))@(string.IsNullOrEmpty(Model.FilterModel.AgeGroup) ? "" : "&ageGroup=" + Uri.EscapeDataString(Model.FilterModel.AgeGroup))@(Model.FilterModel.IsActive.HasValue ? "&isActive=" + Model.FilterModel.IsActive.Value : "")@(Model.FilterModel.FromDate.HasValue ? "&startDate=" + Model.FilterModel.FromDate.Value.ToString("yyyy-MM-dd") : "")@(Model.FilterModel.ToDate.HasValue ? "&endDate=" + Model.FilterModel.ToDate.Value.ToString("yyyy-MM-dd") : "")" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <div class="text-center text-muted mt-3">
+                    Trang @currentPage / @totalPages - Tổng cộng: @totalItems khóa học
+                </div>
+            }
+        }
+        else
+        {
+            <!-- Empty State -->
+            <div class="empty-state text-center py-5">
+                <div class="card border-0">
+                    <div class="card-body py-5">
+                        <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                        <h4 class="text-muted mb-3">Không tìm thấy khóa học nào</h4>
+                        <p class="text-muted mb-4">
+                            Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm của bạn
+                        </p>
+                        <a href="/Courses" class="btn btn-primary">
+                            <i class="fas fa-redo me-1"></i>
+                            Xem tất cả khóa học
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-submit search form on select change
+            $('.search-filter-section select').on('change', function() {
+                $(this).closest('form').submit();
+            });
+
+            // Course card hover effects
+            $('.course-card').hover(
+                function() { $(this).addClass('shadow-lg').removeClass('shadow-sm'); },
+                function() { $(this).addClass('shadow-sm').removeClass('shadow-lg'); }
+            );
+
+            // Smooth scroll to course detail
+            if (window.location.hash === '#course-detail') {
+                $('html, body').animate({
+                    scrollTop: $('.course-detail-section').offset().top - 100
+                }, 1000);
+            }
+
+            // Registration form loading states
+            $('form[asp-page-handler="Register"], form[asp-page-handler="Unregister"]').on('submit', function() {
+                const btn = $(this).find('button[type="submit"]');
+                const originalText = btn.html();
+                btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...').prop('disabled', true);
+                
+                // Re-enable after 10 seconds as fallback
+                setTimeout(() => {
+                    btn.html(originalText).prop('disabled', false);
+                }, 10000);
+            });
+
+            // Search form enhancement
+            $('input[name="searchKeyword"]').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    $(this).closest('form').submit();
+                }
+            });
+
+            // Filter form enhancement
+            $('.search-filter-section form').on('submit', function(e) {
+                // Remove empty values before submit
+                $(this).find('input, select').each(function() {
+                    if ($(this).val() === '') {
+                        $(this).prop('name', '');
+                    }
+                });
+            });
+        });
+
+        // Utility functions
+        function showToast(message, type = 'info') {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            let container = $('#toast-container');
+            if (container.length === 0) {
+                $('body').append('<div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3"></div>');
+                container = $('#toast-container');
+            }
+            
+            const toast = $(toastHtml);
+            container.append(toast);
+            
+            const bsToast = new bootstrap.Toast(toast[0]);
+            bsToast.show();
+            
+            toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+    </script>
+}
+
+<style>
+    /* ✅ Course-specific styles */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-radius: 1rem;
+        padding: 3rem;
+        margin-bottom: 2rem;
+    }
+
+    .course-card {
+        transition: all 0.3s ease;
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .course-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .course-image {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .course-image img {
+        transition: transform 0.3s ease;
+    }
+
+    .course-card:hover .course-image img {
+        transform: scale(1.05);
+    }
+
+    .course-badges {
+        z-index: 10;
+    }
+
+    .course-meta small {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .course-actions .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .search-filter-section .card {
+        border-radius: 1rem;
+    }
+
+    .empty-state .card {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 1rem;
+    }
+
+    .course-detail-section .card {
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .course-detail-section .object-cover {
+        object-fit: cover;
+    }
+
+    .info-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .registration-actions {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .stats-card .card {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+    }
+
+    .stats-card h3 {
+        color: white !important;
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+
+    /* Responsive improvements */
+    media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        .course-detail-section .card-body {
+            padding: 2rem 1.5rem;
+        }
+
+        .course-info .col-md-6 {
+            margin-bottom: 1rem;
+        }
+
+        .course-actions {
+            flex-direction: column;
+        }
+
+        .course-actions .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .course-actions .d-flex {
+            flex-direction: column;
+        }
+
+        .course-actions .flex-grow-1 {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    /* Animation improvements */
+    .course-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .course-card:nth-child(2) { animation-delay: 0.1s; }
+    .course-card:nth-child(3) { animation-delay: 0.2s; }
+    .course-card:nth-child(4) { animation-delay: 0.3s; }
+
+    keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Loading states */
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    /* Enhanced hover effects */
+    .course-card:hover .course-badges .badge {
+        transform: scale(1.05);
+    }
+
+    .course-detail-section .card:hover {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Button group improvements */
+    .course-actions .btn-group {
+        width: 100%;
+    }
+
+    .course-actions .btn-group .btn {
+        border-radius: 0.375rem;
+    }
+
+    /* Search form enhancements */
+    .search-filter-section .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .search-filter-section .form-control:focus,
+    .search-filter-section .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    /* Toast container */
+    #toast-container {
+        z-index: 10000;
+    }
+
+    /* Pagination improvements */
+    .pagination .page-link {
+        border-radius: 0.375rem;
+        margin: 0 2px;
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-color: var(--primary-color);
+    }
+
+    .pagination .page-link:hover {
+        background-color: rgba(102, 126, 234, 0.1);
+        border-color: var(--primary-color);
+    }
+
+    /* Badge improvements */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.5em 0.75em;
+        border-radius: 0.5rem;
+    }
+
+    /* Card hover shadow */
+    .card.shadow-sm:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .card.shadow-lg {
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+    }
+</style>

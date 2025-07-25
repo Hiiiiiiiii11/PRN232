@@ -1,0 +1,702 @@
+﻿@page
+@model DrugUserPreventionUI.Pages.NewsArticles.NewsArticleModel
+@{
+    ViewData["Title"] = "Tin tức";
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">📰 Tin tức</h1>
+                    <p class="text-muted">Cập nhật thông tin mới nhất về phòng chống tệ nạn xã hội</p>
+                </div>
+                @if (Model.IsAdminUser)
+                {
+                    <div>
+                        <a href="/Admin/NewsArticles/Create" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Tạo tin tức mới
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.MessageType == "error" ? "danger" : Model.MessageType) alert-dismissible fade show" role="alert">
+            @Model.Message
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" asp-page-handler="Search">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="text" name="searchKeyword" class="form-control"
+                                           placeholder="Tìm kiếm tin tức..." value="@Model.FilterModel.SearchKeyword">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="categoryId" class="form-select">
+                                    <option value="">Tất cả danh mục</option>
+                                    @if (Model.Categories != null && Model.Categories.Any())
+                                    {
+                                        @foreach (var category in Model.Categories)
+                                        {
+                                            <option value="@category.CategoryID"
+                                                    selected="@(Model.FilterModel.CategoryID == category.CategoryID)">
+                                                @category.CategoryName
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <select name="newsSource" class="form-select">
+                                    <option value="">Tất cả nguồn</option>
+                                    <!-- Sources will be populated from backend -->
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="fromDate" class="form-control"
+                                       value="@Model.FilterModel.FromDate?.ToString("yyyy-MM-dd")" placeholder="Từ ngày">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="toDate" class="form-control"
+                                       value="@Model.FilterModel.ToDate?.ToString("yyyy-MM-dd")" placeholder="Đến ngày">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.CurrentAction == "detail" && Model.NewsDetail != null)
+    {
+        <!-- News Detail View -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Chi tiết tin tức</h5>
+                            <a href="/NewsArticles/NewsArticles" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <article>
+                            <header class="mb-4">
+                                <h1 class="display-6">@Model.NewsDetail.NewsTitle</h1>
+                                <h2 class="text-muted h5">@Model.NewsDetail.Headline</h2>
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <span class="@Model.GetNewsStatusBadgeClass(Model.NewsDetail.NewsStatus)">
+                                        @Model.GetNewsStatusText(Model.NewsDetail.NewsStatus)
+                                    </span>
+                                    @if (Model.NewsDetail.Category != null)
+                                    {
+                                        <span class="badge bg-info">@Model.NewsDetail.Category.CategoryName</span>
+                                    }
+                                    @if (Model.NewsDetail.NewsTags != null && Model.NewsDetail.NewsTags.Any())
+                                    {
+                                        @foreach (var newsTag in Model.NewsDetail.NewsTags)
+                                        {
+                                            <span class="badge bg-secondary">@newsTag.Tag?.TagName</span>
+                                        }
+                                    }
+                                </div>
+                                <div class="text-muted small mt-2">
+                                    <i class="fas fa-calendar"></i> @Model.FormatDate(Model.NewsDetail.CreatedDate)
+                                    <i class="fas fa-user ms-3"></i> @Model.NewsDetail.CreatedBy?.FullName
+                                    <i class="fas fa-globe ms-3"></i> @Model.NewsDetail.NewsSource
+                                </div>
+                            </header>
+                            <div class="news-content">
+                                @Html.Raw(Model.NewsDetail.NewsContent)
+                            </div>
+
+                            <!-- Social Share Buttons -->
+                            <div class="social-share mt-4 pt-4 border-top">
+                                <h6 class="mb-3">Chia sẻ bài viết:</h6>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="shareNews('@Model.NewsDetail.NewsTitle', window.location.href)">
+                                        <i class="fab fa-facebook-f"></i> Facebook
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="shareOnTwitter('@Model.NewsDetail.NewsTitle', window.location.href)">
+                                        <i class="fab fa-twitter"></i> Twitter
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="copyToClipboard(window.location.href)">
+                                        <i class="fas fa-link"></i> Sao chép link
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- News List View -->
+        <div class="row">
+            @if (Model.NewsArticles.Any())
+            {
+                @foreach (var article in Model.NewsArticles)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-2">
+                                    <span class="@Model.GetNewsStatusBadgeClass(article.NewsStatus)">
+                                        @Model.GetNewsStatusText(article.NewsStatus)
+                                    </span>
+                                    @if (article.Category != null)
+                                    {
+                                        <span class="badge bg-info ms-1">@article.Category.CategoryName</span>
+                                    }
+                                </div>
+                                <h5 class="card-title">
+                                    <a href="/NewsArticles/NewsArticles?action=detail&id=@article.NewsArticleID"
+                                       class="text-decoration-none">
+                                        @article.NewsTitle
+                                    </a>
+                                </h5>
+                                <h6 class="card-subtitle text-muted mb-2">@article.Headline</h6>
+                                <p class="card-text flex-grow-1">
+                                    @Model.TruncateContent(article.NewsContent, 150)
+                                </p>
+                                <div class="card-footer bg-transparent border-0 p-0 mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> @Model.FormatDate(article.CreatedDate)
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-globe"></i> @article.NewsSource
+                                        </small>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> @article.CreatedBy?.FullName
+                                        </small>
+                                        <div>
+                                            <a href="/NewsArticles/NewsArticles?action=detail&id=@article.NewsArticleID"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i> Xem chi tiết
+                                            </a>
+                                            @if (Model.IsAdminUser)
+                                            {
+                                                <a href="/Admin/NewsArticles/Edit/@article.NewsArticleID"
+                                                   class="btn btn-outline-warning btn-sm ms-1">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Không có tin tức nào</h4>
+                        <p class="text-muted">Hiện tại chưa có tin tức nào được đăng tải.</p>
+                        @if (Model.IsAdminUser)
+                        {
+                            <a href="/Admin/NewsArticles/Create" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Tạo tin tức đầu tiên
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.PaginationInfo != null && Model.PaginationInfo.TotalPages > 1)
+        {
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="News pagination">
+                        <ul class="pagination justify-content-center">
+                            @if (Model.PaginationInfo.HasPreviousPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Page("/NewsArticles/NewsArticles", new { pageIndex = Model.PaginationInfo.CurrentPage - 1, pageSize = Model.FilterModel.PageSize })">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.PaginationInfo.CurrentPage - 2);
+                           i <= Math.Min(Model.PaginationInfo.TotalPages, Model.PaginationInfo.CurrentPage + 2);
+                           i++)
+                            {
+                                <li class="page-item @(i == Model.PaginationInfo.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Page("/NewsArticles/NewsArticles", new { pageIndex = i, pageSize = Model.FilterModel.PageSize })">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            @if (Model.PaginationInfo.HasNextPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Page("/NewsArticles/NewsArticles", new { pageIndex = Model.PaginationInfo.CurrentPage + 1, pageSize = Model.FilterModel.PageSize })">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                    <div class="text-center text-muted">
+                        Hiển thị @((Model.PaginationInfo.CurrentPage - 1) * Model.FilterModel.PageSize + 1) -
+                        @(Math.Min(Model.PaginationInfo.CurrentPage * Model.FilterModel.PageSize, Model.PaginationInfo.TotalItems))
+                        trong tổng số @Model.PaginationInfo.TotalItems tin tức
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+@*     <!-- Quick Navigation -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-compass"></i> Điều hướng nhanh
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="/NewsArticles/NewsArticles?action=category&id=1" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-shield-alt"></i> Phòng chống tệ nạn
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/NewsArticles/NewsArticles?action=category&id=2" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-heart"></i> Sức khỏe cộng đồng
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/NewsArticles/NewsArticles?action=category&id=3" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-graduation-cap"></i> Giáo dục - Tuyên truyền
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/NewsArticles/NewsArticles?action=category&id=4" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-balance-scale"></i> Chính sách - Pháp luật
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> *@
+
+    <!-- Recent News Widget (if not in detail view) -->
+    @if (Model.CurrentAction != "detail")
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock"></i> Tin tức gần đây
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.NewsArticles.Take(3).Any())
+                        {
+                            <div class="row">
+                                @foreach (var recentArticle in Model.NewsArticles.Take(3))
+                                {
+                                    <div class="col-md-4">
+                                        <div class="card border-0 bg-light h-100">
+                                            <div class="card-body">
+                                                <h6 class="card-title">
+                                                    <a href="/NewsArticles/NewsArticles?action=detail&id=@recentArticle.NewsArticleID"
+                                                       class="text-decoration-none">
+                                                        @recentArticle.NewsTitle
+                                                    </a>
+                                                </h6>
+                                                <p class="card-text small text-muted">
+                                                    @Model.TruncateContent(recentArticle.Headline, 100)
+                                                </p>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar"></i> @Model.FormatDate(recentArticle.CreatedDate)
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Chưa có tin tức gần đây nào.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Custom CSS -->
+<style>
+    .news-content {
+        line-height: 1.6;
+        font-size: 1.1em;
+    }
+
+        .news-content h1, .news-content h2, .news-content h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            color: #333;
+        }
+
+        .news-content p {
+            margin-bottom: 1em;
+            text-align: justify;
+        }
+
+        .news-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.375rem;
+            margin: 1em 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+    .card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+    .badge {
+        font-size: 0.75em;
+    }
+
+    .pagination .page-link {
+        color: #0d6efd;
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-success:hover,
+    .btn-outline-info:hover,
+    .btn-outline-warning:hover {
+        transform: translateY(-1px);
+    }
+
+    .social-share .btn {
+        min-width: 100px;
+    }
+
+    .alert {
+        border-left: 4px solid;
+        border-radius: 0.375rem;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+
+    .alert-warning {
+        border-left-color: #ffc107;
+    }
+
+    .alert-info {
+        border-left-color: #0dcaf0;
+    }
+
+    /* Loading animation */
+    .btn.loading {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+
+    /* Custom scrollbar */
+    .news-content::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .news-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .news-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+        .news-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+</style>
+
+<!-- Custom JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-dismiss alerts after 5 seconds
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                if (alert && !alert.classList.contains('alert-permanent')) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        });
+
+        // Search form enhancement
+        const searchForm = document.querySelector('form[asp-page-handler="Search"]');
+        if (searchForm) {
+            const searchInput = searchForm.querySelector('input[name="searchKeyword"]');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchForm.submit();
+                }
+            });
+
+            // Add search suggestions (if needed)
+            searchInput.addEventListener('input', function(e) {
+                // Implement search suggestions here if needed
+            });
+        }
+
+        // Add loading state to buttons on click
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                if (this.type === 'submit' || (this.href && !this.href.includes('#'))) {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+                    this.classList.add('loading');
+
+                    // Re-enable after 3 seconds as fallback
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('loading');
+                    }, 3000);
+                }
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        const anchorLinks = document.querySelectorAll('a[href^="#"]');
+        anchorLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Image lazy loading for news content
+        const images = document.querySelectorAll('.news-content img');
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src || img.src;
+                        img.classList.remove('lazy');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+
+            images.forEach(img => imageObserver.observe(img));
+        }
+    });
+
+    // Function to format date in Vietnamese
+    function formatVietnameseDate(dateString) {
+        const date = new Date(dateString);
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        return date.toLocaleDateString('vi-VN', options);
+    }
+
+    // Function to share news article on Facebook
+    function shareNews(title, url) {
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                url: url
+            }).then(() => {
+                showNotification('Chia sẻ thành công!', 'success');
+            }).catch((error) => {
+                console.log('Lỗi khi chia sẻ:', error);
+                fallbackShare(url);
+            });
+        } else {
+            fallbackShare(url);
+        }
+    }
+
+    // Function to share on Twitter
+    function shareOnTwitter(title, url) {
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+        window.open(twitterUrl, '_blank', 'width=600,height=400');
+    }
+
+    // Fallback share function for browsers that don't support Web Share API
+    function fallbackShare(url) {
+        const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+
+    // Function to copy link to clipboard
+    function copyToClipboard(text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Đã sao chép link vào clipboard!', 'success');
+            }).catch(err => {
+                console.error('Lỗi khi sao chép: ', err);
+                fallbackCopyToClipboard(text);
+            });
+        } else {
+            fallbackCopyToClipboard(text);
+        }
+    }
+
+    // Fallback copy function
+    function fallbackCopyToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            showNotification('Đã sao chép link vào clipboard!', 'success');
+        } catch (err) {
+            console.error('Lỗi khi sao chép: ', err);
+            showNotification('Không thể sao chép link. Vui lòng sao chép thủ công.', 'error');
+        }
+
+        document.body.removeChild(textArea);
+    }
+
+    // Function to show notifications
+    function showNotification(message, type = 'info') {
+        const alertClass = type === 'error' ? 'danger' : type;
+        const alertHtml = `
+            <div class="alert alert-${alertClass} alert-dismissible fade show position-fixed"
+                 style="top: 20px; right: 20px; z-index: 9999; max-width: 300px;" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+            const alert = document.querySelector('.alert.position-fixed');
+            if (alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 3000);
+    }
+
+    // Function to print article
+    function printArticle() {
+        window.print();
+    }
+
+    // Function to toggle reading mode
+    function toggleReadingMode() {
+        document.body.classList.toggle('reading-mode');
+        const button = document.querySelector('.reading-mode-btn');
+        if (document.body.classList.contains('reading-mode')) {
+            button.innerHTML = '<i class="fas fa-times"></i> Thoát chế độ đọc';
+        } else {
+            button.innerHTML = '<i class="fas fa-book-open"></i> Chế độ đọc';
+        }
+    }
+</script>
+
+<!-- Reading mode CSS -->
+<style>
+    .reading-mode {
+        background-color: #f8f9fa !important;
+    }
+
+        .reading-mode .container-fluid {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .reading-mode .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .reading-mode .news-content {
+            font-size: 1.2em;
+            line-height: 1.8;
+        }
+
+        .reading-mode .card-header,
+        .reading-mode .social-share,
+        .reading-mode .quick-navigation,
+        .reading-mode .recent-news {
+            display: none !important;
+        }
+</style>

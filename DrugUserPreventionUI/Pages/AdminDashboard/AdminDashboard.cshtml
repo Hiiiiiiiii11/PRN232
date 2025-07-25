@@ -1,0 +1,953 @@
+﻿@page "/AdminDashboard"
+@model DrugUserPreventionUI.Pages.AdminDashboard.AdminDashboardModel
+@{
+    ViewData["Title"] = "Quản lý Hệ thống";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+    
+    int currentPage = ViewData["CurrentPage"] as int? ?? 1;
+    int totalPages = ViewData["TotalPages"] as int? ?? 1;
+    int totalItems = ViewData["TotalItems"] as int? ?? 0;
+    bool hasPrevious = currentPage > 1;
+    bool hasNext = currentPage < totalPages;
+    
+    // Get user info from JWT token using LoginModel methods
+    var loginModel = new DrugUserPreventionUI.Pages.LoginModel(HttpContext.RequestServices.GetService<IHttpClientFactory>());
+    loginModel.PageContext = PageContext;
+    var currentUser = loginModel.GetCurrentUser();
+    var displayName = loginModel.GetDisplayName();
+    var userRole = loginModel.GetUserRole();
+    var isAuthenticated = loginModel.IsAuthenticated();
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Quản lý Hệ thống
+                    </h2>
+                    <small class="text-muted">
+                        Quản lý tài khoản và thống kê hệ thống
+                    </small>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- User Info -->
+                    <div class="text-end">
+                        <small class="text-muted d-block">Xin chào,</small>
+                        <strong class="text-primary">@displayName</strong>
+                        <span class="badge bg-danger ms-1">@userRole</span>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="btn-group">
+                        <a href="?action=add" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i>
+                            Thêm tài khoản
+                        </a>
+                        
+                        <a href="/CourseDashboard" class="btn btn-outline-info">
+                            <i class="fas fa-graduation-cap me-1"></i>
+                            Quản lý khóa học
+                        </a>
+                        
+                        <form method="post" asp-page="/Login" asp-page-handler="Logout" style="display: inline;">
+                            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                                <i class="fas fa-sign-out-alt me-1"></i>
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication & Authorization Check -->
+    @if (!isAuthenticated || currentUser == null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Chưa đăng nhập!</strong> Bạn cần đăng nhập để truy cập trang này.
+            <div class="mt-2">
+                <a href="/Login" class="btn btn-sm btn-warning">
+                    <i class="fas fa-sign-in-alt me-1"></i>
+                    Đăng nhập ngay
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    else if (userRole != "Admin")
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-ban me-2"></i>
+            <strong>Không có quyền truy cập!</strong> Chỉ Admin mới có thể truy cập trang này.
+            <div class="mt-2">
+                <a href="/CourseDashboard" class="btn btn-sm btn-primary">
+                    <i class="fas fa-graduation-cap me-1"></i>
+                    Quản lý khóa học
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    else
+    {
+        <!-- Alert Messages -->
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <div class="alert alert-@(Model.MessageType == "success" ? "success" : Model.MessageType == "error" ? "danger" : "info") alert-dismissible fade show" role="alert">
+                <i class="fas fa-@(Model.MessageType == "success" ? "check-circle" : Model.MessageType == "error" ? "exclamation-triangle" : "info-circle") me-2"></i>
+                @Model.Message
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- Statistics Dashboard -->
+        @if (string.IsNullOrEmpty(Model.CurrentAction) || Model.CurrentAction == "list")
+        {
+            <!-- Statistics Cards -->
+            @if (Model.Statistics != null)
+            {
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="mb-0">@Model.Statistics.TotalUsers</h4>
+                                        <small>Tổng người dùng</small>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        @(Model.Statistics?.UsersByRole.ContainsKey("Staff") == true ? Model.Statistics.UsersByRole["Staff"] : 0)
+                                        <small>Staff</small>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user-tie fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        @(Model.Statistics?.UsersByRole.ContainsKey("Consultant") == true ? Model.Statistics.UsersByRole["Consultant"] : 0)
+                                        <small>Consultant</small>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user-graduate fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        @(Model.Statistics?.UsersByRole.ContainsKey("Member") == true ? Model.Statistics.UsersByRole["Member"] : 0)
+                                        <small>Member</small>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Statistics -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Thống kê theo vai trò</h6>
+                            </div>
+                            <div class="card-body">
+                                @foreach (var roleStats in Model.Statistics.UsersByRole)
+                                {
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>@roleStats.Key:</span>
+                                        <span class="badge bg-secondary">@roleStats.Value</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Thống kê theo trạng thái</h6>
+                            </div>
+                            <div class="card-body">
+                                @foreach (var statusStats in Model.Statistics.UsersByStatus)
+                                {
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>@statusStats.Key:</span>
+                                        <span class="badge @(statusStats.Key == "Active" ? "bg-success" : "bg-danger")">@statusStats.Value</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- User Management Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        Quản lý Tài khoản Staff & Consultant
+                        @if (totalItems > 0)
+                        {
+                            <span class="badge bg-primary ms-2">@totalItems</span>
+                        }
+                    </h5>
+                    
+                    <!-- Search and Filter -->
+                    <div class="d-flex gap-2">
+                        <form method="get" class="d-flex gap-2">
+                            <input type="hidden" name="action" value="list" />
+                            <select name="roleFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">Tất cả vai trò</option>
+                                @if (ViewData["RoleFilter"]?.ToString() == "Staff")
+                                {
+                                    <option value="Staff" selected>Staff</option>
+                                }
+                                else
+                                {
+                                    <option value="Staff">Staff</option>
+                                }
+
+                                @if (ViewData["RoleFilter"]?.ToString() == "Consultant")
+                                {
+                                    <option value="Consultant" selected>Consultant</option>
+                                }
+                                else
+                                {
+                                    <option value="Consultant">Consultant</option>
+                                }
+                            </select>
+                            
+                            <input type="text" name="searchTerm" class="form-control form-control-sm" 
+                                   placeholder="Tìm kiếm..." value="@ViewData["SearchTerm"]" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.Users.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Họ tên</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Vai trò</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày tạo</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in Model.Users)
+                                    {
+                                        <tr class="@(user.Status == "Banned" ? "table-danger" : "")">
+                                            <td>@user.UserID</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(user.AvatarUrl))
+                                                    {
+                                                        <img src="@user.AvatarUrl" class="rounded-circle me-2" width="32" height="32" alt="Avatar" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                            <i class="fas fa-user text-white"></i>
+                                                        </div>
+                                                    }
+                                                    <div>
+                                                        <strong>@user.FullName</strong>
+                                                        @if (user.IsEmailVerified)
+                                                        {
+                                                            <i class="fas fa-check-circle text-success ms-1" title="Email đã xác thực"></i>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>@user.Username</td>
+                                            <td>@user.Email</td>
+                                            <td>
+                                                <span class="badge @(user.Role == "Staff" ? "bg-success" : user.Role == "Consultant" ? "bg-info" : "bg-secondary")">
+                                                    @user.Role
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge @(user.Status == "Active" ? "bg-success" : "bg-danger")">
+                                                    @user.Status
+                                                </span>
+                                            </td>
+                                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <!-- View Detail -->
+@*                                                     <a href="?action=detail&id=@user.UserID" 
+                                                       class="btn btn-sm btn-outline-info" 
+                                                       title="Xem chi tiết">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a> *@
+                                                    
+                                                    <!-- Edit -->
+                                                    <a href="?action=edit&id=@user.UserID" 
+                                                       class="btn btn-sm btn-outline-warning" 
+                                                       title="Chỉnh sửa">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    
+                                                    <!-- Ban/Unban -->
+@*                                                     @if (user.Status == "Active")
+                                                    {
+                                                        <form method="post" asp-page-handler="BanUser" style="display: inline;" class="d-inline">
+                                                            <input type="hidden" name="id" value="@user.UserID" />
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-outline-danger" 
+                                                                    title="Cấm tài khoản"
+                                                                    onclick="return confirm('Bạn có chắc muốn cấm tài khoản: @user.FullName?')">
+                                                                <i class="fas fa-ban"></i>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    else
+                                                    {
+                                                        <form method="post" asp-page-handler="UnbanUser" style="display: inline;" class="d-inline">
+                                                            <input type="hidden" name="id" value="@user.UserID" />
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-outline-success" 
+                                                                    title="Bỏ cấm tài khoản"
+                                                                    onclick="return confirm('Bạn có chắc muốn bỏ cấm tài khoản: @user.FullName?')">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                        </form>
+                                                    } *@
+                                                    
+                                                    <!-- Delete -->
+                                                    <form method="post" asp-page-handler="DeleteUser" style="display: inline;" class="d-inline">
+                                                        <input type="hidden" name="id" value="@user.UserID" />
+                                                        <button type="submit" 
+                                                                class="btn btn-sm btn-outline-danger" 
+                                                                title="Xóa tài khoản"
+                                                                onclick="return confirm('⚠️ XÓA TÀI KHOẢN\n\nBạn có chắc muốn xóa tài khoản: @user.FullName?\n\n❗ Hành động này KHÔNG THỂ HOÀN TÁC!')">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        @if (totalPages > 1)
+                        {
+                            <nav aria-label="User pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item @(hasPrevious ? "" : "disabled")">
+                                        <a class="page-link" href="?pageIndex=@(currentPage - 1)" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    
+                                    @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                    {
+                                        <li class="page-item @(i == currentPage ? "active" : "")">
+                                            <a class="page-link" href="?pageIndex=@i">@i</a>
+                                        </li>
+                                    }
+                                    
+                                    <li class="page-item @(hasNext ? "" : "disabled")">
+                                        <a class="page-link" href="?pageIndex=@(currentPage + 1)" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                            
+                            <div class="text-center text-muted">
+                                Trang @currentPage / @totalPages - Tổng cộng: @totalItems tài khoản
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Empty State -->
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Chưa có tài khoản nào</h5>
+                            <p class="text-muted">Nhấn nút "Thêm tài khoản" để tạo tài khoản Staff/Consultant đầu tiên</p>
+                            <a href="?action=add" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-1"></i>
+                                Tạo tài khoản đầu tiên
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- User Detail View -->
+        @if (Model.CurrentAction == "detail" && Model.UserDetail != null)
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Chi tiết Tài khoản</h5>
+                    <a href="/AdminDashboard" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            @if (!string.IsNullOrEmpty(Model.UserDetail.AvatarUrl))
+                            {
+                                <img src="@Model.UserDetail.AvatarUrl" class="img-fluid rounded-circle mb-3" alt="Avatar" style="max-width: 200px;" />
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 200px; height: 200px;">
+                                    <i class="fas fa-user fa-5x text-muted"></i>
+                                </div>
+                            }
+                            <h4>@Model.UserDetail.FullName</h4>
+                            <p class="text-muted">@Model.UserDetail.Role</p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>ID:</strong></div>
+                                <div class="col-sm-8">@Model.UserDetail.UserID</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Username:</strong></div>
+                                <div class="col-sm-8">@Model.UserDetail.Username</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Email:</strong></div>
+                                <div class="col-sm-8">
+                                    @Model.UserDetail.Email
+                                    @if (Model.UserDetail.IsEmailVerified)
+                                    {
+                                        <i class="fas fa-check-circle text-success ms-1" title="Đã xác thực"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times-circle text-danger ms-1" title="Chưa xác thực"></i>
+                                    }
+                                </div>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(Model.UserDetail.Phone))
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><strong>Điện thoại:</strong></div>
+                                    <div class="col-sm-8">@Model.UserDetail.Phone</div>
+                                </div>
+                            }
+                            
+                            @if (Model.UserDetail.DateOfBirth.HasValue)
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><strong>Ngày sinh:</strong></div>
+                                    <div class="col-sm-8">@Model.UserDetail.DateOfBirth.Value.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Model.UserDetail.Gender))
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><strong>Giới tính:</strong></div>
+                                    <div class="col-sm-8">@Model.UserDetail.Gender</div>
+                                </div>
+                            }
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Vai trò:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @(Model.UserDetail.Role == "Staff" ? "bg-success" : Model.UserDetail.Role == "Consultant" ? "bg-info" : "bg-secondary")">
+                                        @Model.UserDetail.Role
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Trạng thái:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @(Model.UserDetail.Status == "Active" ? "bg-success" : "bg-danger")">
+                                        @Model.UserDetail.Status
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
+                                <div class="col-sm-8">@Model.UserDetail.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                            
+                            <!-- Action buttons -->
+                            <div class="mt-4">
+                                <a href="?action=edit&id=@Model.UserDetail.UserID" class="btn btn-warning me-2">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Chỉnh sửa
+                                </a>
+                                
+                                @if (Model.UserDetail.Status == "Active")
+                                {
+                                    <form method="post" asp-page-handler="BanUser" style="display: inline;" class="me-2">
+                                        <input type="hidden" name="id" value="@Model.UserDetail.UserID" />
+                                        <button type="submit" class="btn btn-danger" 
+                                                onclick="return confirm('Bạn có chắc muốn cấm tài khoản này?')">
+                                            <i class="fas fa-ban me-1"></i>
+                                            Cấm tài khoản
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="UnbanUser" style="display: inline;" class="me-2">
+                                        <input type="hidden" name="id" value="@Model.UserDetail.UserID" />
+                                        <button type="submit" class="btn btn-success" 
+                                                onclick="return confirm('Bạn có chắc muốn bỏ cấm tài khoản này?')">
+                                            <i class="fas fa-check me-1"></i>
+                                            Bỏ cấm
+                                        </button>
+                                    </form>
+                                }
+                                
+                                @if (!Model.UserDetail.IsEmailVerified)
+                                {
+                                    <form method="post" asp-page-handler="VerifyEmail" style="display: inline;" class="me-2">
+                                        <input type="hidden" name="id" value="@Model.UserDetail.UserID" />
+                                        <button type="submit" class="btn btn-info">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            Xác thực Email
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Add/Edit User Form -->
+        @if (Model.CurrentAction == "add" || Model.CurrentAction == "edit")
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        @if (Model.CurrentAction == "add")
+                        {
+                            <i class="fas fa-user-plus me-2"></i><text>Thêm tài khoản mới</text>
+                        }
+                        else
+                        {
+                            <i class="fas fa-user-edit me-2"></i><text>Chỉnh sửa tài khoản</text>
+                        }
+                    </h5>
+                    <a href="/AdminDashboard" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>
+                        Hủy
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="@(Model.CurrentAction == "add" ? "CreateUser" : "UpdateUser")">
+                        @if (Model.CurrentAction == "edit")
+                        {
+                            <input type="hidden" name="userForm.UserID" value="@Request.Query["id"]" />
+                        }
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.FullName" class="form-label">
+                                        <i class="fas fa-user me-1"></i>
+                                        Họ và tên *
+                                    </label>
+                                    <input asp-for="UserForm.FullName" class="form-control" required placeholder="Nhập họ và tên..." />
+                                    <span asp-validation-for="UserForm.FullName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.Username" class="form-label">
+                                        <i class="fas fa-at me-1"></i>
+                                        Username *
+                                    </label>
+                                    <input asp-for="UserForm.Username" class="form-control" required placeholder="Nhập username..." />
+                                    <span asp-validation-for="UserForm.Username" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.Email" class="form-label">
+                                        <i class="fas fa-envelope me-1"></i>
+                                        Email *
+                                    </label>
+                                    <input asp-for="UserForm.Email" class="form-control" type="email" required placeholder="Nhập email..." />
+                                    <span asp-validation-for="UserForm.Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.Role" class="form-label">
+                                        <i class="fas fa-user-tag me-1"></i>
+                                        Vai trò *
+                                    </label>
+                                    <select asp-for="UserForm.Role" class="form-select" required>
+                                        <option value="">-- Chọn vai trò --</option>
+                                        <option value="Staff">Staff</option>
+                                        <option value="Consultant">Consultant</option>
+                                    </select>
+                                    <span asp-validation-for="UserForm.Role" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Model.CurrentAction == "add")
+                        {
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="UserForm.Password" class="form-label">
+                                            <i class="fas fa-lock me-1"></i>
+                                            Mật khẩu *
+                                        </label>
+                                        <input asp-for="UserForm.Password" class="form-control" type="password" required placeholder="Nhập mật khẩu..." />
+                                        <span asp-validation-for="UserForm.Password" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-lock me-1"></i>
+                                            Xác nhận mật khẩu *
+                                        </label>
+                                        <input name="confirmPassword" class="form-control" type="password" required placeholder="Xác nhận mật khẩu..." />
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.Phone" class="form-label">
+                                        <i class="fas fa-phone me-1"></i>
+                                        Số điện thoại
+                                    </label>
+                                    <input asp-for="UserForm.Phone" class="form-control" placeholder="Nhập số điện thoại..." />
+                                    <span asp-validation-for="UserForm.Phone" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.Gender" class="form-label">
+                                        <i class="fas fa-venus-mars me-1"></i>
+                                        Giới tính
+                                    </label>
+                                    <select asp-for="UserForm.Gender" class="form-select">
+                                        <option value="">-- Chọn giới tính --</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                    <span asp-validation-for="UserForm.Gender" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.DateOfBirth" class="form-label">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Ngày sinh
+                                    </label>
+                                    <input asp-for="UserForm.DateOfBirth" class="form-control" type="date" />
+                                    <span asp-validation-for="UserForm.DateOfBirth" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UserForm.AvatarUrl" class="form-label">
+                                        <i class="fas fa-image me-1"></i>
+                                        URL Avatar
+                                    </label>
+                                    <input asp-for="UserForm.AvatarUrl" class="form-control" type="url" placeholder="https://example.com/avatar.jpg" />
+                                    <span asp-validation-for="UserForm.AvatarUrl" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/AdminDashboard" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                @if (Model.CurrentAction == "add")
+                                {
+                                    <span>Tạo tài khoản</span>
+                                }
+                                else
+                                {
+                                    <span>Cập nhật</span>
+                                }
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Auto dismiss alerts after 8 seconds
+            setTimeout(function() {
+                $('.alert:not(.alert-warning):not(.alert-danger)').alert('close');
+            }, 8000);
+
+            // Enhance form validation
+            $('form').on('submit', function(e) {
+                var form = $(this);
+                var isValid = true;
+
+                // Check required fields
+                form.find('input[required], select[required]').each(function() {
+                    if (!$(this).val().trim()) {
+                        isValid = false;
+                        $(this).addClass('is-invalid');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                // Check password confirmation for create user form
+                var password = form.find('input[name="UserForm.Password"]').val();
+                var confirmPassword = form.find('input[name="confirmPassword"]').val();
+                
+                if (password && confirmPassword && password !== confirmPassword) {
+                    isValid = false;
+                    form.find('input[name="confirmPassword"]').addClass('is-invalid');
+                    alert('Mật khẩu xác nhận không khớp!');
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+                    return false;
+                }
+
+                // Add loading state to submit button
+                var submitBtn = form.find('button[type="submit"]');
+                var originalText = submitBtn.html();
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...').prop('disabled', true);
+
+                // Re-enable button after 10 seconds as fallback
+                setTimeout(function() {
+                    submitBtn.html(originalText).prop('disabled', false);
+                }, 10000);
+            });
+
+            // Remove validation classes on input
+            $('input, select').on('input change', function() {
+                $(this).removeClass('is-invalid');
+            });
+
+            // Preview avatar image
+            $('input[name="UserForm.AvatarUrl"]').on('input', function() {
+                var url = $(this).val();
+                var preview = $('#avatar-preview');
+                
+                if (preview.length === 0) {
+                    $(this).parent().append('<div id="avatar-preview" class="mt-2"></div>');
+                    preview = $('#avatar-preview');
+                }
+                
+                if (url && url.match(/\.(jpeg|jpg|gif|png)$/)) {
+                    preview.html('<img src="' + url + '" alt="Preview" class="img-thumbnail rounded-circle" style="max-width: 100px; max-height: 100px;">');
+                } else if (url) {
+                    preview.html('<small class="text-muted">URL không phải là hình ảnh hợp lệ</small>');
+                } else {
+                    preview.empty();
+                }
+            });
+
+            // Add tooltips for buttons
+            $('[title]').tooltip();
+
+            // Animate statistics cards
+            $('.card').each(function(index) {
+                $(this).delay(100 * index).animate({
+                    opacity: 1
+                }, 500);
+            });
+        });
+    </script>
+}
+
+<style>
+/* Custom CSS for Admin Dashboard */
+.card {
+    animation: fadeInUp 0.6s ease-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-group .btn {
+    border-radius: 0.375rem;
+    margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.form-label i {
+    color: var(--bs-primary);
+}
+
+.pagination .page-link {
+    border-radius: 0.375rem;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-info) 100%);
+    border-color: var(--bs-primary);
+}
+
+.pagination .page-link:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: var(--bs-primary);
+}
+
+/* Statistics cards hover effect */
+.card.bg-primary:hover,
+.card.bg-success:hover,
+.card.bg-info:hover,
+.card.bg-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Mobile responsive */
+media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 2px;
+        margin-right: 0;
+        width: 100%;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .card-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .card-header .btn-group {
+        margin-top: 1rem;
+        width: 100%;
+    }
+}
+</style>

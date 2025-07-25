@@ -1,0 +1,66 @@
+# Visual Studio user-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio working folder
+.vs/
+.vs/**
+
+# Build results
+[Bb]in/
+[Oo]bj/
+x64/
+x86/
+build/
+bld/
+artifacts/
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+packages/
+
+# .NET Core project lock files
+project.lock.json
+project.fragment.lock.json
+
+# Logs
+[Ll]og/
+[Ll]ogs/
+*.log
+
+# Code coverage
+coverage/
+CodeCoverage/
+*.coverage
+*.coveragexml
+
+# Test results
+TestResult.xml
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Rider IDE files
+.idea/
+
+# MSBuild logs
+*.binlog
+
+# Scaffolding
+ScaffoldingReadMe.txt
+
+# Copilot & GitHub files
+*.vsidx
+CopilotIndices/
+copilot-chat/
+
+# VS DesignTime cache
+*.v2
+*.dtbcache.v2
+DocumentLayout*.json
+
+# Temp and system files
+~$*
+*~

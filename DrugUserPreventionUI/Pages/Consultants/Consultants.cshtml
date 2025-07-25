@@ -1,0 +1,1051 @@
+﻿@page
+@model DrugUserPreventionUI.Pages.Consultants.ConsultantsModel
+@{
+    ViewData["Title"] = "Chuyên gia tư vấn";
+}
+
+<div class="container-fluid page-content">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">👨‍⚕️ Chuyên gia tư vấn</h1>
+                    <p class="text-muted">Kết nối với các chuyên gia tư vấn phòng chống tệ nạn xã hội</p>
+                </div>
+                @if (Model.IsAdminUser)
+                {
+                    <div>
+                        <a href="/Admin/Consultants/Create" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm chuyên gia mới
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.MessageType == "error" ? "danger" : Model.MessageType) alert-dismissible fade show" role="alert">
+            @Model.Message
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" asp-page-handler="Search">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <input type="text" name="searchKeyword" class="form-control"
+                                           placeholder="Tìm kiếm theo tên, email, chuyên môn..." value="@Model.FilterModel.SearchKeyword">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="specialty" class="form-select">
+                                    <option value="">Tất cả chuyên môn</option>
+                                    <option value="Tâm lý học" selected="@(Model.FilterModel.Specialty == "Tâm lý học")">Tâm lý học</option>
+                                    <option value="Y học" selected="@(Model.FilterModel.Specialty == "Y học")">Y học</option>
+                                    <option value="Xã hội học" selected="@(Model.FilterModel.Specialty == "Xã hội học")">Xã hội học</option>
+                                    <option value="Pháp luật" selected="@(Model.FilterModel.Specialty == "Pháp luật")">Pháp luật</option>
+                                    <option value="Giáo dục" selected="@(Model.FilterModel.Specialty == "Giáo dục")">Giáo dục</option>
+                                </select>
+                            </div>
+                            @if (Model.IsAdminUser)
+                            {
+                                <div class="col-md-2">
+                                    <select name="status" class="form-select">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="Active" selected="@(Model.FilterModel.Status == "Active")">Hoạt động</option>
+                                        <option value="Inactive" selected="@(Model.FilterModel.Status == "Inactive")">Không hoạt động</option>
+                                    </select>
+                                </div>
+                            }
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-secondary w-100">
+                                    <i class="fas fa-filter"></i> Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.CurrentAction == "detail" && Model.ConsultantDetail != null)
+    {
+        <!-- Consultant Detail View -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Thông tin chuyên gia</h5>
+                            <a href="/Consultants/Consultants" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Consultant Info -->
+                            <div class="col-lg-4">
+                                <div class="text-center mb-4">
+                                    <img src="@(Model.ConsultantDetail.User?.AvatarUrl ?? "https://cdn.pixabay.com/photo/2013/07/13/10/12/no-drugs-156771_1280.png")"
+                                         alt="@Model.ConsultantDetail.User?.FullName" 
+                                         class="rounded-circle mb-3" 
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                    <h4>@Model.ConsultantDetail.User?.FullName</h4>
+                                    <p class="text-muted">@Model.ConsultantDetail.Specialty</p>
+                                    <span class="@Model.GetUserStatusBadgeClass(Model.ConsultantDetail.User?.Status)">
+                                        @Model.GetUserStatusText(Model.ConsultantDetail.User?.Status)
+                                    </span>
+                                </div>
+
+                                <!-- Contact Info -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin liên hệ</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><i class="fas fa-envelope"></i> <strong>Email:</strong> @Model.ConsultantDetail.User?.Email</p>
+                                        <p><i class="fas fa-phone"></i> <strong>Điện thoại:</strong> @Model.ConsultantDetail.User?.Phone</p>
+                                        <p><i class="fas fa-calendar"></i> <strong>Ngày sinh:</strong> 
+                                           @(Model.ConsultantDetail.User?.DateOfBirth.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")</p>
+                                        <p><i class="fas fa-clock"></i> <strong>Giờ làm việc:</strong> 
+                                           @Model.FormatWorkingHours(Model.ConsultantDetail.WorkingHours)</p>
+                                    </div>
+                                </div>
+
+                                <!-- Book Appointment Button -->
+                                @if (Model.IsAuthenticated)
+                                {
+                                    <button type="button" class="btn btn-primary w-100 mt-3" 
+                                            data-bs-toggle="modal" data-bs-target="#bookAppointmentModal">
+                                        <i class="fas fa-calendar-plus"></i> Đặt lịch hẹn
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a href="/Account/Login?returnUrl=@Request.Path" class="btn btn-primary w-100 mt-3">
+                                        <i class="fas fa-sign-in-alt"></i> Đăng nhập để đặt lịch
+                                    </a>
+                                }
+                            </div>
+
+                            <!-- Consultant Details -->
+                            <div class="col-lg-8">
+                                <!-- Qualifications -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-graduation-cap"></i> Trình độ chuyên môn</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="qualifications-content">
+                                            @Html.Raw(Model.ConsultantDetail.Qualifications)
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Courses -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-book"></i> Khóa học (@Model.ConsultantCourses.Count)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (Model.ConsultantCourses.Any())
+                                        {
+                                            <div class="row">
+                                                @foreach (var course in Model.ConsultantCourses)
+                                                {
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="card border-light h-100">
+                                                            <div class="card-body">
+                                                                <h6 class="card-title">@course.CourseName</h6>
+                                                                <p class="card-text small text-muted">
+                                                                    @Model.TruncateContent(course.CourseDescription, 100)
+                                                                </p>
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <small class="text-muted">
+                                                                        <i class="fas fa-calendar"></i> @Model.FormatDateOnly(course.CreatedAt)
+                                                                    </small>
+                                                                    <span class="badge bg-info">@course.Status</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <!-- Courses Pagination -->
+                                            @if (Model.CoursesPaginationInfo != null && Model.CoursesPaginationInfo.TotalPages > 1)
+                                            {
+                                                <nav aria-label="Courses pagination" class="mt-3">
+                                                    <ul class="pagination pagination-sm justify-content-center">
+                                                        @if (Model.CoursesPaginationInfo.HasPreviousPage)
+                                                        {
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="@Url.Page("/Consultants/Consultants", new { action = "detail", id = Model.ConsultantDetail.ConsultantID, coursesPageIndex = Model.CoursesPaginationInfo.CurrentPage - 1 })">
+                                                                    <i class="fas fa-chevron-left"></i>
+                                                                </a>
+                                                            </li>
+                                                        }
+
+                                                        @for (int i = Math.Max(1, Model.CoursesPaginationInfo.CurrentPage - 2);
+                                                       i <= Math.Min(Model.CoursesPaginationInfo.TotalPages, Model.CoursesPaginationInfo.CurrentPage + 2);
+                                                       i++)
+                                                        {
+                                                            <li class="page-item @(i == Model.CoursesPaginationInfo.CurrentPage ? "active" : "")">
+                                                                <a class="page-link" href="@Url.Page("/Consultants/Consultants", new { action = "detail", id = Model.ConsultantDetail.ConsultantID, coursesPageIndex = i })">
+                                                                    @i
+                                                                </a>
+                                                            </li>
+                                                        }
+
+                                                        @if (Model.CoursesPaginationInfo.HasNextPage)
+                                                        {
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="@Url.Page("/Consultants/Consultants", new { action = "detail", id = Model.ConsultantDetail.ConsultantID, coursesPageIndex = Model.CoursesPaginationInfo.CurrentPage + 1 })">
+                                                                    <i class="fas fa-chevron-right"></i>
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </nav>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-3">
+                                                <i class="fas fa-book fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted mb-0">Chuyên gia này chưa tạo khóa học nào.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Appointment Modal -->
+        @if (Model.IsAuthenticated)
+        {
+            <div class="modal fade" id="bookAppointmentModal" tabindex="-1" aria-labelledby="bookAppointmentModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" asp-page-handler="BookAppointment">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="bookAppointmentModalLabel">
+                                    <i class="fas fa-calendar-plus"></i> Đặt lịch hẹn với @Model.ConsultantDetail.User?.FullName
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" name="consultantId" value="@Model.ConsultantDetail.ConsultantID" />
+                                
+                                <div class="mb-3">
+                                    <label for="appointmentDate" class="form-label">Ngày hẹn *</label>
+                                    <input type="date" class="form-control" id="appointmentDate" name="appointmentDate" 
+                                           min="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="appointmentTime" class="form-label">Giờ hẹn *</label>
+                                    <select class="form-select" id="appointmentTime" name="appointmentTime" required>
+                                        <option value="">Chọn giờ hẹn</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="17:00">17:00</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Ghi chú</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                              placeholder="Mô tả vấn đề cần tư vấn hoặc ghi chú thêm..."></textarea>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Lưu ý:</strong> Sau khi đặt lịch, chúng tôi sẽ liên hệ với bạn để xác nhận và cung cấp thông tin chi tiết về buổi tư vấn.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch hẹn
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Consultants List View -->
+        <div class="row">
+            @if (Model.Consultants.Any())
+            {
+                @foreach (var consultant in Model.Consultants)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100 shadow-sm consultant-card">
+                            <div class="card-body d-flex flex-column">
+                                <div class="text-center mb-3">
+                                    <img src="@(consultant.User?.AvatarUrl ?? "/images/default-avatar.png")" 
+                                         alt="@consultant.User?.FullName" 
+                                         class="rounded-circle mb-2" 
+                                         style="width: 80px; height: 80px; object-fit: cover;">
+                                    <div class="mb-2">
+                                        <span class="@Model.GetUserStatusBadgeClass(consultant.User?.Status)">
+                                            @Model.GetUserStatusText(consultant.User?.Status)
+                                        </span>
+                                        <span class="badge bg-info ms-1">@consultant.Specialty</span>
+                                    </div>
+                                </div>
+                                
+                                <h5 class="card-title text-center">
+                                    <a href="/Consultants/Consultants?action=detail&id=@consultant.ConsultantID"
+                                       class="text-decoration-none">
+                                        @consultant.User?.FullName
+                                    </a>
+                                </h5>
+                                
+                                <div class="consultant-info flex-grow-1">
+                                    <p class="text-muted small text-center mb-2">
+                                        <i class="fas fa-envelope"></i> @consultant.User?.Email
+                                    </p>
+                                    <p class="text-muted small text-center mb-2">
+                                        <i class="fas fa-phone"></i> @consultant.User?.Phone
+                                    </p>
+                                    <div class="qualifications-preview">
+                                        @Model.TruncateContent(consultant.Qualifications, 100)
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-book"></i> @consultant.CreatedCourses.Count khóa học
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> @Model.FormatDate(consultant.User?.CreatedAt ?? DateTime.Now)
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <a href="/Consultants/Consultants?action=detail&id=@consultant.ConsultantID"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Xem chi tiết
+                                        </a>
+                                        @if (Model.IsAuthenticated)
+                                        {
+                                            <button type="button" class="btn btn-primary btn-sm" 
+                                                    onclick="quickBookAppointment(@consultant.ConsultantID, '@consultant.User?.FullName')">
+                                                <i class="fas fa-calendar-plus"></i> Đặt lịch nhanh
+                                            </button>
+                                        }
+                                        @if (Model.IsAdminUser)
+                                        {
+                                            <a href="/Admin/Consultants/Edit/@consultant.ConsultantID"
+                                               class="btn btn-outline-warning btn-sm">
+                                                <i class="fas fa-edit"></i> Chỉnh sửa
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Không tìm thấy chuyên gia nào</h4>
+                        <p class="text-muted">Hiện tại chưa có chuyên gia tư vấn nào phù hợp với tiêu chí tìm kiếm.</p>
+                        @if (Model.IsAdminUser)
+                        {
+                            <a href="/Admin/Consultants/Create" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Thêm chuyên gia đầu tiên
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.PaginationInfo != null && Model.PaginationInfo.TotalPages > 1)
+        {
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="Consultants pagination">
+                        <ul class="pagination justify-content-center">
+                            @if (Model.PaginationInfo.HasPreviousPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Page("/Consultants/Consultants", new { pageIndex = Model.PaginationInfo.CurrentPage - 1, pageSize = Model.FilterModel.PageSize })">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.PaginationInfo.CurrentPage - 2);
+                           i <= Math.Min(Model.PaginationInfo.TotalPages, Model.PaginationInfo.CurrentPage + 2);
+                           i++)
+                            {
+                                <li class="page-item @(i == Model.PaginationInfo.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Page("/Consultants/Consultants", new { pageIndex = i, pageSize = Model.FilterModel.PageSize })">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            @if (Model.PaginationInfo.HasNextPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Page("/Consultants/Consultants", new { pageIndex = Model.PaginationInfo.CurrentPage + 1, pageSize = Model.FilterModel.PageSize })">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                    <div class="text-center text-muted">
+                        Hiển thị @((Model.PaginationInfo.CurrentPage - 1) * Model.FilterModel.PageSize + 1) -
+                        @(Math.Min(Model.PaginationInfo.CurrentPage * Model.FilterModel.PageSize, Model.PaginationInfo.TotalItems))
+                        trong tổng số @Model.PaginationInfo.TotalItems chuyên gia
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+@*     <!-- Quick Navigation -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-compass"></i> Tìm kiếm theo chuyên môn
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <a href="/Consultants/Consultants?action=specialty&specialty=Tâm lý học" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-brain"></i> Tâm lý học
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="/Consultants/Consultants?action=specialty&specialty=Y học" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-stethoscope"></i> Y học
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="/Consultants/Consultants?action=specialty&specialty=Xã hội học" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-users"></i> Xã hội học
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="/Consultants/Consultants?action=specialty&specialty=Pháp luật" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-balance-scale"></i> Pháp luật
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="/Consultants/Consultants?action=specialty&specialty=Giáo dục" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-graduation-cap"></i> Giáo dục
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="/Consultants/Consultants" class="btn btn-outline-dark w-100 mb-2">
+                                <i class="fas fa-list"></i> Tất cả
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> *@
+
+    <!-- Statistics Widget (if not in detail view) -->
+    @if (Model.CurrentAction != "detail")
+    {
+        <div class="row mt-4 mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-bar"></i> Thống kê nhanh
+                        </h5>
+                    </div>
+                    <div class="card-body pb-4">
+                        <div class="row text-center g-3">
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 bg-primary text-white">
+                                    <div class="card-body py-3">
+                                        <i class="fas fa-user-md fa-2x mb-2"></i>
+                                        <h4 class="mb-1">@Model.Consultants.Count()</h4>
+                                        <p class="mb-0 small">Chuyên gia hiện tại</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 bg-success text-white">
+                                    <div class="card-body py-3">
+                                        <i class="fas fa-book fa-2x mb-2"></i>
+                                        <h4 class="mb-1">@Model.Consultants.Sum(c => c.CreatedCourses.Count)</h4>
+                                        <p class="mb-0 small">Tổng khóa học</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 bg-info text-white">
+                                    <div class="card-body py-3">
+                                        <i class="fas fa-certificate fa-2x mb-2"></i>
+                                        <h4 class="mb-1">@Model.Consultants.Select(c => c.Specialty).Distinct().Count()</h4>
+                                        <p class="mb-0 small">Chuyên môn</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 bg-warning text-white">
+                                    <div class="card-body py-3">
+                                        <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                                        <h4 class="mb-1">24/7</h4>
+                                        <p class="mb-0 small">Hỗ trợ tư vấn</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Quick Book Appointment Modal -->
+@if (Model.IsAuthenticated)
+{
+    <div class="modal fade" id="quickBookModal" tabindex="-1" aria-labelledby="quickBookModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="BookAppointment">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="quickBookModalLabel">
+                            <i class="fas fa-calendar-plus"></i> Đặt lịch hẹn nhanh
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="quickConsultantId" name="consultantId" />
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Đặt lịch với chuyên gia: <strong id="quickConsultantName"></strong>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quickAppointmentDate" class="form-label">Ngày hẹn *</label>
+                            <input type="date" class="form-control" id="quickAppointmentDate" name="appointmentDate" 
+                                   min="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quickAppointmentTime" class="form-label">Giờ hẹn *</label>
+                            <select class="form-select" id="quickAppointmentTime" name="appointmentTime" required>
+                                <option value="">Chọn giờ hẹn</option>
+                                <option value="08:00">08:00</option>
+                                <option value="09:00">09:00</option>
+                                <option value="10:00">10:00</option>
+                                <option value="11:00">11:00</option>
+                                <option value="14:00">14:00</option>
+                                <option value="15:00">15:00</option>
+                                <option value="16:00">16:00</option>
+                                <option value="17:00">17:00</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quickNotes" class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="quickNotes" name="notes" rows="2" 
+                                      placeholder="Mô tả ngắn gọn vấn đề cần tư vấn..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check"></i> Đặt lịch
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Custom CSS -->
+<style>
+    /* Main container spacing */
+    .container-fluid {
+        padding-bottom: 2rem;
+        min-height: calc(100vh - 200px); /* Ensure minimum height before footer */
+    }
+
+    .consultant-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .consultant-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .qualifications-content {
+        line-height: 1.6;
+    }
+
+    .qualifications-content h1, 
+    .qualifications-content h2, 
+    .qualifications-content h3 {
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+        color: #333;
+    }
+
+    .qualifications-content ul {
+        margin-bottom: 1em;
+    }
+
+    .qualifications-preview {
+        font-size: 0.9em;
+        color: #666;
+        line-height: 1.5;
+    }
+
+    .badge {
+        font-size: 0.75em;
+    }
+
+    .pagination .page-link {
+        color: #0d6efd;
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .alert {
+        border-left: 4px solid;
+        border-radius: 0.375rem;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+
+    .alert-warning {
+        border-left-color: #ffc107;
+    }
+
+    .alert-info {
+        border-left-color: #0dcaf0;
+    }
+
+    /* Avatar styling */
+    .rounded-circle {
+        border: 3px solid #e9ecef;
+        transition: border-color 0.2s ease-in-out;
+    }
+
+    .card:hover .rounded-circle {
+        border-color: #0d6efd;
+    }
+
+    /* Consultant info layout */
+    .consultant-info {
+        min-height: 120px;
+    }
+
+    /* Statistics cards - improved spacing */
+    .card.border-0 {
+        transition: transform 0.2s ease-in-out;
+        margin-bottom: 1rem;
+    }
+
+    .card.border-0:hover {
+        transform: scale(1.05);
+    }
+
+    /* Statistics widget specific styling */
+    .row.mb-5 {
+        margin-bottom: 3rem !important; /* Extra space before footer */
+    }
+
+    .card-body.pb-4 {
+        padding-bottom: 1.5rem !important;
+    }
+
+    /* Form styling */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* Loading animation */
+    .btn.loading {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+
+    keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Footer spacing utility */
+    .page-content {
+        padding-bottom: 4rem; /* Space for footer */
+    }
+
+    /* Responsive adjustments */
+    media (max-width: 768px) {
+        .container-fluid {
+            padding-bottom: 3rem;
+        }
+        
+        .consultant-card .rounded-circle {
+            width: 60px !important;
+            height: 60px !important;
+        }
+        
+        .consultant-info {
+            min-height: auto;
+        }
+        
+        .btn-sm {
+            font-size: 0.8rem;
+        }
+
+        /* Statistics cards mobile spacing */
+        .card.border-0 {
+            margin-bottom: 1rem;
+        }
+        
+        .row.mb-5 {
+            margin-bottom: 2rem !important;
+        }
+    }
+
+    /* Print styles - moved to end */
+    media print {
+        .btn, .modal, .alert, .card-header, .pagination {
+            display: none !important;
+        }
+        
+        .consultant-card {
+            break-inside: avoid;
+            margin-bottom: 1rem !important;
+        }
+        
+        .card {
+            border: 1px solid #ccc !important;
+            box-shadow: none !important;
+        }
+        
+        page {
+            margin: 1cm;
+        }
+    }
+</style>
+
+<!-- Custom JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-dismiss alerts after 5 seconds
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                if (alert && !alert.classList.contains('alert-permanent')) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        });
+
+        // Search form enhancement
+        const searchForm = document.querySelector('form[asp-page-handler="Search"]');
+        if (searchForm) {
+            const searchInput = searchForm.querySelector('input[name="searchKeyword"]');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchForm.submit();
+                }
+            });
+        }
+
+        // Add loading state to buttons on click
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                if (this.type === 'submit' || (this.href && !this.href.includes('#'))) {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<span class="loading-spinner"></span> Đang tải...';
+                    this.classList.add('loading');
+
+                    // Re-enable after 3 seconds as fallback
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('loading');
+                    }, 3000);
+                }
+            });
+        });
+
+        // Date validation for appointment booking
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(function(input) {
+            const today = new Date().toISOString().split('T')[0];
+            input.min = today;
+            
+            // Limit to 30 days from today
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + 30);
+            input.max = maxDate.toISOString().split('T')[0];
+        });
+
+        // Smooth scrolling for anchor links
+        const anchorLinks = document.querySelectorAll('a[href^="#"]');
+        anchorLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    });
+
+    // Function for quick book appointment
+    function quickBookAppointment(consultantId, consultantName) {
+        document.getElementById('quickConsultantId').value = consultantId;
+        document.getElementById('quickConsultantName').textContent = consultantName;
+        
+        const modal = new bootstrap.Modal(document.getElementById('quickBookModal'));
+        modal.show();
+    }
+
+    // Function to show notifications
+    function showNotification(message, type = 'info') {
+        const alertClass = type === 'error' ? 'danger' : type;
+        const alertHtml = `
+            <div class="alert alert-${alertClass} alert-dismissible fade show position-fixed"
+                 style="top: 20px; right: 20px; z-index: 9999; max-width: 300px;" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+            const alert = document.querySelector('.alert.position-fixed');
+            if (alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 3000);
+    }
+
+    // Function to copy consultant contact info
+    function copyContactInfo(email, phone) {
+        const contactInfo = `Email: ${email}\nĐiện thoại: ${phone}`;
+        
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(contactInfo).then(() => {
+                showNotification('Đã sao chép thông tin liên hệ!', 'success');
+            }).catch(err => {
+                console.error('Lỗi khi sao chép: ', err);
+                fallbackCopyToClipboard(contactInfo);
+            });
+        } else {
+            fallbackCopyToClipboard(contactInfo);
+        }
+    }
+
+    // Fallback copy function
+    function fallbackCopyToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            showNotification('Đã sao chép thông tin liên hệ!', 'success');
+        } catch (err) {
+            console.error('Lỗi khi sao chép: ', err);
+            showNotification('Không thể sao chép. Vui lòng sao chép thủ công.', 'error');
+        }
+
+        document.body.removeChild(textArea);
+    }
+
+    // Function to filter consultants by specialty
+    function filterBySpecialty(specialty) {
+        const url = new URL(window.location);
+        url.searchParams.set('action', 'specialty');
+        url.searchParams.set('specialty', specialty);
+        url.searchParams.delete('pageIndex'); // Reset to first page
+        window.location.href = url.toString();
+    }
+
+    // Function to reset all filters
+    function resetFilters() {
+        const url = new URL(window.location);
+        url.search = ''; // Clear all query parameters
+        window.location.href = url.toString();
+    }
+
+    // Function to validate appointment form
+    function validateAppointmentForm(form) {
+        const date = form.querySelector('input[name="appointmentDate"]').value;
+        const time = form.querySelector('select[name="appointmentTime"]').value;
+        
+        if (!date || !time) {
+            showNotification('Vui lòng chọn đầy đủ ngày và giờ hẹn.', 'warning');
+            return false;
+        }
+        
+        const appointmentDateTime = new Date(date + 'T' + time);
+        const now = new Date();
+        
+        if (appointmentDateTime <= now) {
+            showNotification('Thời gian hẹn phải sau thời điểm hiện tại.', 'warning');
+            return false;
+        }
+        
+        // Check if it's during working hours (8:00 - 17:00)
+        const hour = appointmentDateTime.getHours();
+        if (hour < 8 || hour >= 18) {
+            showNotification('Vui lòng chọn giờ hẹn trong khoảng 8:00 - 17:00.', 'warning');
+            return false;
+        }
+        
+        // Check if it's a weekday
+        const dayOfWeek = appointmentDateTime.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            showNotification('Hiện tại chỉ hỗ trợ đặt lịch từ Thứ 2 đến Thứ 6.', 'warning');
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Add form validation to appointment forms
+    document.addEventListener('DOMContentLoaded', function() {
+        const appointmentForms = document.querySelectorAll('form[asp-page-handler="BookAppointment"]');
+        appointmentForms.forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                if (!validateAppointmentForm(this)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    });
+
+    // Function to toggle consultant card view
+    function toggleCardView() {
+        const cards = document.querySelectorAll('.consultant-card');
+        cards.forEach(card => {
+            card.classList.toggle('compact-view');
+        });
+    }
+
+    // Print consultant list function
+    function printConsultantList() {
+        window.print();
+    }
+
+    // Export consultant data (if admin)
+    function exportConsultantData() {
+        // This would typically call an API to export data
+        showNotification('Chức năng xuất dữ liệu đang được phát triển.', 'info');
+    }
+</script>
+
+<!-- Print styles -->
+<style media="print">
+    .btn, .modal, .alert, .card-header, .pagination {
+        display: none !important;
+    }
+    
+    .consultant-card {
+        break-inside: avoid;
+        margin-bottom: 1rem !important;
+    }
+    
+    .card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+    
+    page {
+        margin: 1cm;
+    }
+</style>

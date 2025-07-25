@@ -1,0 +1,29 @@
+﻿@page
+@model DrugUserPreventionUI.Pages.AppointmentModel
+@{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td>Id</td>
+                <td>ConsultantId</td>
+                <td>ScheduledAt</td>
+                <td>Status</td>
+                <td>Notes</td>
+                <td>CreatedAt</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appointment in Model.appointments)
+            {
+                <tr>
+                    <td>@appointment.AppointmentID</td>
+                    <td>@appointment.ConsultantID</td>
+                    <td>@appointment.ScheduledAt</td>
+                    <td>@appointment.Status</td>
+                    <td>@appointment.Notes</td>
+                    <td>@appointment.CreatedAt</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

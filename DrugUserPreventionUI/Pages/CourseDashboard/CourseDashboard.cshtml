@@ -1,0 +1,992 @@
+﻿@page "/CourseDashboard"
+@model DrugUserPreventionUI.Pages.CourseDashboard.CourseDashboardModel
+@{
+    ViewData["Title"] = "Quản lý Khóa học";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+    
+    int currentPage = ViewData["CurrentPage"] as int? ?? 1;
+    int totalPages = ViewData["TotalPages"] as int? ?? 1;
+    int totalItems = ViewData["TotalItems"] as int? ?? 0;
+    bool hasPrevious = currentPage > 1;
+    bool hasNext = currentPage < totalPages;
+    
+    // Get user info from JWT token using LoginModel methods
+    var loginModel = new DrugUserPreventionUI.Pages.LoginModel(HttpContext.RequestServices.GetService<IHttpClientFactory>());
+    loginModel.PageContext = PageContext;
+    var currentUser = loginModel.GetCurrentUser();
+    var displayName = loginModel.GetDisplayName();
+    var userRole = loginModel.GetUserRole();
+    var isAuthenticated = loginModel.IsAuthenticated();
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        Quản lý Khóa học
+                    </h2>
+                    <small class="text-muted">
+                        @if (userRole == "Consultant")
+                        {
+                            <span>Tạo và quản lý khóa học của bạn</span>
+                        }
+                        else if (userRole == "Manager")
+                        {
+                            <span>Duyệt và quản lý trạng thái khóa học</span>
+                        }
+                        else if (userRole == "Staff")
+                        {
+                            <span>Hỗ trợ quản lý trạng thái khóa học</span>
+                        }
+                        else if (userRole == "Admin")
+                        {
+                            <span>Quản lý toàn bộ hệ thống khóa học</span>
+                        }
+                    </small>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- User Info -->
+                    <div class="text-end">
+                        <small class="text-muted d-block">Xin chào,</small>
+                        <strong class="text-primary">@displayName</strong>
+                        <span class="badge bg-secondary ms-1">@userRole</span>
+                    </div>
+                    
+                    <!-- Actions based on role -->
+                    <div class="btn-group">
+                        <!-- Only Consultant and Admin can create courses -->
+                        @if (Model.UserCanCreateCourse())
+                        {
+                            <a href="?action=add" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>
+                                Thêm khóa học
+                            </a>
+                        }
+                        
+                        <a href="/Courses" class="btn btn-outline-info">
+                            <i class="fas fa-eye me-1"></i>
+                            Xem trang khóa học
+                        </a>
+                        
+                        <form method="post" asp-page="/Login" asp-page-handler="Logout" style="display: inline;">
+                            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                                <i class="fas fa-sign-out-alt me-1"></i>
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication & Authorization Check -->
+    @if (!isAuthenticated || currentUser == null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Chưa đăng nhập!</strong> Bạn cần đăng nhập để truy cập trang này.
+            <div class="mt-2">
+                <a href="/Login" class="btn btn-sm btn-warning">
+                    <i class="fas fa-sign-in-alt me-1"></i>
+                    Đăng nhập ngay
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    else if (userRole == "Member" || userRole == "Guest")
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-ban me-2"></i>
+            <strong>Không có quyền truy cập!</strong> Bạn không có quyền sử dụng trang quản lý này.
+            <div class="mt-2">
+                <a href="/Courses" class="btn btn-sm btn-primary">
+                    <i class="fas fa-graduation-cap me-1"></i>
+                    Xem khóa học
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    else
+    {
+        <!-- Alert Messages -->
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <div class="alert alert-@(Model.MessageType == "success" ? "success" : Model.MessageType == "error" ? "danger" : "info") alert-dismissible fade show" role="alert">
+                <i class="fas fa-@(Model.MessageType == "success" ? "check-circle" : Model.MessageType == "error" ? "exclamation-triangle" : "info-circle") me-2"></i>
+                @Model.Message
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- Course List View -->
+        @if (string.IsNullOrEmpty(Model.CurrentAction) || Model.CurrentAction == "list")
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        Danh sách Khóa học
+                        @if (totalItems > 0)
+                        {
+                            <span class="badge bg-primary ms-2">@totalItems</span>
+                        }
+                    </h5>
+                    
+                    <!-- Role-based stats -->
+                    <div class="text-end">
+                        @if (userRole == "Consultant")
+                        {
+                            <small class="text-muted d-block">Khóa học do bạn tạo sẽ cần được duyệt</small>
+                        }
+                        else if (userRole == "Manager")
+                        {
+                            <small class="text-muted d-block">Bạn có thể duyệt và quản lý khóa học</small>
+                        }
+                        else if (userRole == "Staff")
+                        {
+                            <small class="text-muted d-block">Bạn có thể cập nhật trạng thái khóa học</small>
+                        }
+                        else if (userRole == "Admin")
+                        {
+                            <small class="text-muted d-block">Quyền quản lý toàn bộ</small>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.Courses.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tiêu đề</th>
+                                        <th>Nhóm đối tượng</th>
+                                        <th>Độ tuổi</th>
+                                        <th>Người tạo</th>
+                                        <th>Ngày tạo</th>
+                                        
+                                        <!-- Only show Status column if user can update status -->
+                                        @if (Model.UserCanUpdateStatus())
+                                        {
+                                            <th>Trạng thái</th>
+                                        }
+                                        
+                                        <!-- Only show Approval column if user can approve -->
+                                        @if (Model.UserCanApproveCourse())
+                                        {
+                                            <th>Duyệt</th>
+                                        }
+                                        
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var course in Model.Courses)
+                                    {
+                                        <tr class="@(course.CreatorName == displayName ? "table-warning" : "")">
+                                            <td>@course.CourseID</td>
+                                            <td>
+                                                <strong>@course.Title</strong>
+                                                <br>
+                                                <small class="text-muted">@(course.Description?.Length > 50 ? course.Description.Substring(0, 50) + "..." : course.Description)</small>
+                                                
+                                                <!-- Show "Your course" badge for courses created by current user -->
+                                                @if (course.CreatorName == displayName)
+                                                {
+                                                    <br><span class="badge bg-info mt-1">Khóa học của bạn</span>
+                                                }
+                                            </td>
+                                            <td>@course.TargetGroup</td>
+                                            <td>@course.AgeGroup</td>
+                                            <td>
+                                                @(course.CreatorName ?? "N/A")
+                                                @if (course.CreatorName == displayName)
+                                                {
+                                                    <small class="text-primary d-block">(Bạn)</small>
+                                                }
+                                            </td>
+                                            <td>@course.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                            
+                                            <!-- Status Column - Only for users who can update status -->
+                                            @if (Model.UserCanUpdateStatus())
+                                            {
+                                                <td>
+                                                    <form method="post" asp-page-handler="UpdateStatus" style="display: inline;">
+                                                        <input type="hidden" name="id" value="@course.CourseID" />
+                                                        <input type="hidden" name="isActive" value="@(!course.IsActive)" />
+                                                        <button type="submit" 
+                                                                class="btn btn-sm @(course.IsActive ? "btn-success" : "btn-secondary")" 
+                                                                onclick="return confirm('@(course.IsActive ? "Bạn có chắc muốn vô hiệu hóa khóa học này?" : "Bạn có chắc muốn kích hoạt khóa học này?")')">
+                                                            @if (course.IsActive)
+                                                            {
+                                                                <i class="fas fa-check-circle me-1"></i><text>Hoạt động</text>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="fas fa-times-circle me-1"></i><text>Tạm dừng</text>
+                                                            }
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            }
+                                            
+                                            <!-- Approval Column - Only for users who can approve -->
+                                            @if (Model.UserCanApproveCourse())
+                                            {
+                                                <td>
+                                                    @if (course.IsAccept)
+                                                    {
+                                                        <!-- Already approved -->
+                                                        <div class="approval-column">
+                                                            <span class="badge bg-success mb-1">
+                                                                <i class="fas fa-check-circle me-1"></i>Đã duyệt
+                                                            </span>
+                                                            <form method="post" asp-page-handler="Approve" style="display: inline;">
+                                                                <input type="hidden" name="id" value="@course.CourseID" />
+                                                                <input type="hidden" name="isAccept" value="false" />
+                                                                <button type="submit" 
+                                                                        class="btn btn-sm btn-outline-secondary" 
+                                                                        onclick="return confirm('Bạn có chắc muốn hủy duyệt khóa học này?')"
+                                                                        title="Hủy duyệt">
+                                                                    <i class="fas fa-times me-1"></i>Hủy duyệt
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <!-- Pending approval -->
+                                                        <div class="approval-column">
+                                                            <span class="badge bg-warning mb-1">
+                                                                <i class="fas fa-clock me-1"></i>Chờ duyệt
+                                                            </span>
+                                                            <form method="post" asp-page-handler="Approve" style="display: inline;">
+                                                                <input type="hidden" name="id" value="@course.CourseID" />
+                                                                <input type="hidden" name="isAccept" value="true" />
+                                                                <button type="submit" 
+                                                                        class="btn btn-sm btn-primary" 
+                                                                        onclick="return confirm('Bạn có chắc muốn duyệt khóa học này?')"
+                                                                        title="Duyệt khóa học">
+                                                                    <i class="fas fa-check me-1"></i>Duyệt
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    }
+                                                </td>
+                                            }
+                                            
+                                            <!-- Action Buttons -->
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <!-- View Detail - Everyone can view -->
+                                                    <a href="?action=detail&id=@course.CourseID" 
+                                                       class="btn btn-sm btn-outline-info" 
+                                                       title="Xem chi tiết">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    
+                                                    <!-- Edit - Only if user can edit this course -->
+                                                    @if (Model.UserCanEditCourse(course.CreatorName))
+                                                    {
+                                                        <a href="?action=edit&id=@course.CourseID" 
+                                                           class="btn btn-sm btn-outline-warning" 
+                                                           title="Chỉnh sửa">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    }
+                                                    
+                                                    <!-- Delete - Only if user can delete this course -->
+                                                    @if (Model.UserCanDeleteCourse(course.CreatorName))
+                                                    {
+                                                        <form method="post" asp-page-handler="Delete" style="display: inline;" class="d-inline">
+                                                            <input type="hidden" name="id" value="@course.CourseID" />
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-outline-danger" 
+                                                                    title="Xóa"
+                                                                    onclick="return confirm('Bạn có chắc muốn xóa khóa học: @course.Title?\n\nHành động này không thể hoàn tác.')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        @if (totalPages > 1)
+                        {
+                            <nav aria-label="Course pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item @(hasPrevious ? "" : "disabled")">
+                                        <a class="page-link" href="?pageIndex=@(currentPage - 1)" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    
+                                    @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                    {
+                                        <li class="page-item @(i == currentPage ? "active" : "")">
+                                            <a class="page-link" href="?pageIndex=@i">@i</a>
+                                        </li>
+                                    }
+                                    
+                                    <li class="page-item @(hasNext ? "" : "disabled")">
+                                        <a class="page-link" href="?pageIndex=@(currentPage + 1)" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                            
+                            <div class="text-center text-muted">
+                                Trang @currentPage / @totalPages - Tổng cộng: @totalItems khóa học
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Empty State -->
+                        <div class="text-center py-5">
+                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Chưa có khóa học nào</h5>
+                            @if (Model.UserCanCreateCourse())
+                            {
+                                <p class="text-muted">Nhấn nút "Thêm khóa học" để tạo khóa học đầu tiên</p>
+                                <a href="?action=add" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Tạo khóa học đầu tiên
+                                </a>
+                            }
+                            else
+                            {
+                                <p class="text-muted">Hiện tại chưa có khóa học nào trong hệ thống</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Course Detail View -->
+        @if (Model.CurrentAction == "detail" && Model.CourseDetail != null)
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        Chi tiết Khóa học
+                        @if (Model.CourseDetail.CreatorName == displayName)
+                        {
+                            <span class="badge bg-info ms-2">Khóa học của bạn</span>
+                        }
+                    </h5>
+                    <a href="/CourseDashboard" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            @if (!string.IsNullOrEmpty(Model.CourseDetail.ThumbnailURL))
+                            {
+                                <img src="@Model.CourseDetail.ThumbnailURL" class="img-fluid rounded" alt="Course Thumbnail" />
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <h3>@Model.CourseDetail.Title</h3>
+                            <p class="text-muted">@Model.CourseDetail.Description</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-6">
+                                    <strong>Nhóm đối tượng:</strong> @Model.CourseDetail.TargetGroup
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Độ tuổi:</strong> @Model.CourseDetail.AgeGroup
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-6">
+                                    <strong>Trạng thái:</strong> 
+                                    <span class="badge @(Model.CourseDetail.IsActive ? "bg-success" : "bg-secondary")">
+                                        @(Model.CourseDetail.IsActive ? "Đang hoạt động" : "Tạm dừng")
+                                    </span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Duyệt:</strong>
+                                    <span class="badge @(Model.CourseDetail.IsAccept ? "bg-success" : "bg-warning")">
+                                        @(Model.CourseDetail.IsAccept ? "Đã duyệt" : "Chờ duyệt")
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-6">
+                                    <strong>Ngày tạo:</strong> @Model.CourseDetail.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Người tạo:</strong> 
+                                    @(Model.CourseDetail.CreatorName ?? "N/A")
+                                    @if (Model.CourseDetail.CreatorName == displayName)
+                                    {
+                                        <small class="text-primary">(Bạn)</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-6">
+                                    <strong>Số lượng nội dung:</strong> @Model.CourseDetail.TotalContents
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Số lượng đăng ký:</strong> @Model.CourseDetail.TotalRegistrations
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.CourseDetail.ContentURL))
+                            {
+                                <div class="mb-3">
+                                    <strong>Nội dung:</strong>
+                                    <a href="@Model.CourseDetail.ContentURL" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                        <i class="fas fa-external-link-alt me-1"></i>
+                                        Xem nội dung
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Action buttons based on permissions -->
+                            <div class="mt-4">
+                                @if (Model.UserCanEditCourse(Model.CourseDetail.CreatorName))
+                                {
+                                    <a href="?action=edit&id=@Model.CourseDetail.CourseID" class="btn btn-warning me-2">
+                                        <i class="fas fa-edit me-1"></i>
+                                        Chỉnh sửa
+                                    </a>
+                                }
+                                
+                                @if (Model.UserCanApproveCourse())
+                                {
+                                    @if (Model.CourseDetail.IsAccept)
+                                    {
+                                        <form method="post" asp-page-handler="Approve" style="display: inline;" class="me-2">
+                                            <input type="hidden" name="id" value="@Model.CourseDetail.CourseID" />
+                                            <input type="hidden" name="isAccept" value="false" />
+                                            <button type="submit" class="btn btn-outline-secondary" 
+                                                    onclick="return confirm('Bạn có chắc muốn hủy duyệt khóa học này?')">
+                                                <i class="fas fa-times me-1"></i>
+                                                Hủy duyệt
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-page-handler="Approve" style="display: inline;" class="me-2">
+                                            <input type="hidden" name="id" value="@Model.CourseDetail.CourseID" />
+                                            <input type="hidden" name="isAccept" value="true" />
+                                            <button type="submit" class="btn btn-success" 
+                                                    onclick="return confirm('Bạn có chắc muốn duyệt khóa học này?')">
+                                                <i class="fas fa-check me-1"></i>
+                                                Duyệt khóa học
+                                            </button>
+                                        </form>
+                                    }
+                                }
+                                
+                                @if (Model.UserCanUpdateStatus())
+                                {
+                                    <form method="post" asp-page-handler="UpdateStatus" style="display: inline;" class="me-2">
+                                        <input type="hidden" name="id" value="@Model.CourseDetail.CourseID" />
+                                        <input type="hidden" name="isActive" value="@(!Model.CourseDetail.IsActive)" />
+                                        <button type="submit" class="btn @(Model.CourseDetail.IsActive ? "btn-outline-secondary" : "btn-outline-success")" 
+                                                onclick="return confirm('@(Model.CourseDetail.IsActive ? "Bạn có chắc muốn tạm dừng khóa học này?" : "Bạn có chắc muốn kích hoạt khóa học này?")')">
+                                            @if (Model.CourseDetail.IsActive)
+                                            {
+                                                <i class="fas fa-pause me-1"></i><text>Tạm dừng</text>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-play me-1"></i><text>Kích hoạt</text>
+                                            }
+                                        </button>
+                                    </form>
+                                }
+                                
+                                <a href="/Courses?action=detail&id=@Model.CourseDetail.CourseID" target="_blank" class="btn btn-outline-info">
+                                    <i class="fas fa-external-link-alt me-1"></i>
+                                    Xem trang công khai
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Add/Edit Course Form -->
+        @if (Model.CurrentAction == "add" || Model.CurrentAction == "edit")
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        @if (Model.CurrentAction == "add")
+                        {
+                            <i class="fas fa-plus me-2"></i><text>Thêm khóa học mới</text>
+                        }
+                        else
+                        {
+                            <i class="fas fa-edit me-2"></i><text>Chỉnh sửa khóa học</text>
+                            }
+                    </h5>
+                    <a href="/CourseDashboard" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>
+                        Hủy
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.CurrentAction == "add")
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Khóa học sau khi tạo sẽ có trạng thái "Chờ duyệt" và cần được Manager phê duyệt trước khi hiển thị công khai.
+                        </div>
+                    }
+                    
+                    <form method="post" asp-page-handler="@(Model.CurrentAction == "add" ? "Add" : "Update")">
+                        @if (Model.CurrentAction == "edit")
+                        {
+                            <input type="hidden" name="id" value="@Request.Query["id"]" />
+                        }
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CourseForm.Title" class="form-label">
+                                        <i class="fas fa-heading me-1"></i>
+                                        Tiêu đề khóa học *
+                                    </label>
+                                    <input asp-for="CourseForm.Title" class="form-control" required placeholder="Nhập tiêu đề khóa học..." />
+                                    <span asp-validation-for="CourseForm.Title" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CourseForm.TargetGroup" class="form-label">
+                                        <i class="fas fa-users me-1"></i>
+                                        Nhóm đối tượng *
+                                    </label>
+                                    <select asp-for="CourseForm.TargetGroup" class="form-select" required>
+                                        <option value="">-- Chọn nhóm đối tượng --</option>
+                                        <option value="Học sinh">Học sinh</option>
+                                        <option value="Sinh viên">Sinh viên</option>
+                                        <option value="Người lao động">Người lao động</option>
+                                        <option value="Phụ huynh">Phụ huynh</option>
+                                        <option value="Cộng đồng">Cộng đồng</option>
+                                    </select>
+                                    <span asp-validation-for="CourseForm.TargetGroup" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CourseForm.AgeGroup" class="form-label">
+                                        <i class="fas fa-child me-1"></i>
+                                        Độ tuổi *
+                                    </label>
+                                    <select asp-for="CourseForm.AgeGroup" class="form-select" required>
+                                        <option value="">-- Chọn độ tuổi --</option>
+                                        <option value="6-12">6-12 tuổi</option>
+                                        <option value="13-18">13-18 tuổi</option>
+                                        <option value="18-25">18-25 tuổi</option>
+                                        <option value="25+">Trên 25 tuổi</option>
+                                        <option value="Mọi lứa tuổi">Mọi lứa tuổi</option>
+                                    </select>
+                                    <span asp-validation-for="CourseForm.AgeGroup" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CourseForm.ThumbnailURL" class="form-label">
+                                        <i class="fas fa-image me-1"></i>
+                                        URL Hình đại diện
+                                    </label>
+                                    <input asp-for="CourseForm.ThumbnailURL" class="form-control" type="url" placeholder="https://example.com/image.jpg" />
+                                    <span asp-validation-for="CourseForm.ThumbnailURL" class="text-danger"></span>
+                                    <div class="form-text">Liên kết đến hình ảnh đại diện cho khóa học</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CourseForm.Description" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>
+                                Mô tả khóa học *
+                            </label>
+                            <textarea asp-for="CourseForm.Description" class="form-control" rows="4" required 
+                                      placeholder="Mô tả chi tiết về nội dung, mục tiêu và lợi ích của khóa học..."></textarea>
+                            <span asp-validation-for="CourseForm.Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CourseForm.ContentURL" class="form-label">
+                                <i class="fas fa-link me-1"></i>
+                                URL Nội dung khóa học
+                            </label>
+                            <input asp-for="CourseForm.ContentURL" class="form-control" type="url" placeholder="https://example.com/course-content" />
+                            <span asp-validation-for="CourseForm.ContentURL" class="text-danger"></span>
+                            <div class="form-text">Liên kết đến nội dung khóa học (video, tài liệu, website, etc.)</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/CourseDashboard" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                @if (Model.CurrentAction == "add")
+                                {
+                                    <span>Tạo khóa học</span>
+                                }
+                                else
+                                {
+                                    <span>Cập nhật khóa học</span>
+                                }
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Auto dismiss alerts after 8 seconds
+            setTimeout(function() {
+                $('.alert:not(.alert-warning):not(.alert-danger)').alert('close');
+            }, 8000);
+
+            // Enhance form validation
+            $('form').on('submit', function(e) {
+                var form = $(this);
+                var isValid = true;
+
+                // Check required fields
+                form.find('input[required], select[required], textarea[required]').each(function() {
+                    if (!$(this).val().trim()) {
+                        isValid = false;
+                        $(this).addClass('is-invalid');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+                    return false;
+                }
+
+                // Add loading state to submit button
+                var submitBtn = form.find('button[type="submit"]');
+                var originalText = submitBtn.html();
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...').prop('disabled', true);
+
+                // Re-enable button after 10 seconds as fallback
+                setTimeout(function() {
+                    submitBtn.html(originalText).prop('disabled', false);
+                }, 10000);
+            });
+
+            // Remove validation classes on input
+            $('input, select, textarea').on('input change', function() {
+                $(this).removeClass('is-invalid');
+            });
+
+            // Preview thumbnail image
+            $('input[name="CourseForm.ThumbnailURL"]').on('input', function() {
+                var url = $(this).val();
+                var preview = $('#thumbnail-preview');
+                
+                if (preview.length === 0) {
+                    $(this).parent().append('<div id="thumbnail-preview" class="mt-2"></div>');
+                    preview = $('#thumbnail-preview');
+                }
+                
+                if (url && url.match(/\.(jpeg|jpg|gif|png)$/)) {
+                    preview.html('<img src="' + url + '" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">');
+                } else if (url) {
+                    preview.html('<small class="text-muted">URL không phải là hình ảnh hợp lệ</small>');
+                } else {
+                    preview.empty();
+                }
+            });
+
+            // Highlight user's own courses
+            $('.table tbody tr').each(function() {
+                if ($(this).find('.badge:contains("Khóa học của bạn")').length > 0) {
+                    $(this).addClass('table-warning');
+                }
+            });
+
+            // Enhanced confirmation dialogs
+            $('button[onclick*="confirm"]').on('click', function(e) {
+                var action = $(this).text().trim();
+                var courseName = $(this).closest('tr').find('strong').first().text();
+                
+                if (action.includes('Xóa')) {
+                    return confirm('⚠️ XÓA KHÓA HỌC\n\nBạn có chắc muốn xóa khóa học "' + courseName + '"?\n\n❗ Hành động này KHÔNG THỂ HOÀN TÁC!\n❗ Tất cả dữ liệu liên quan sẽ bị mất!\n\nNhấn OK để xác nhận xóa.');
+                }
+                
+                if (action.includes('Duyệt')) {
+                    return confirm('✅ DUYỆT KHÓA HỌC\n\nBạn có chắc muốn duyệt khóa học "' + courseName + '"?\n\nSau khi duyệt, khóa học sẽ hiển thị công khai cho người dùng.');
+                }
+                
+                if (action.includes('Hủy duyệt')) {
+                    return confirm('❌ HỦY DUYỆT KHÓA HỌC\n\nBạn có chắc muốn hủy duyệt khóa học "' + courseName + '"?\n\nSau khi hủy duyệt, khóa học sẽ không hiển thị công khai.');
+                }
+            });
+
+            // Role-based UI enhancements
+            var userRole = '@userRole';
+            
+            if (userRole === 'Consultant') {
+                // Highlight consultant's courses
+                $('.table tbody tr').each(function() {
+                    if ($(this).find('small:contains("(Bạn)")').length > 0) {
+                        $(this).addClass('border-start border-primary border-3');
+                    }
+                });
+            }
+            
+            // Add tooltips for buttons
+            $('[title]').tooltip();
+        });
+    </script>
+}
+
+<}
+
+
+
+<style>
+/* Custom CSS for role-based dashboard */
+.btn-group .btn {
+    border-radius: 0.375rem;
+    margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.375rem;
+}
+
+.btn i {
+    margin-right: 0.25rem;
+}
+
+.btn-group form {
+    display: inline-block;
+}
+
+/* Approval column styling */
+.approval-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 100px;
+}
+
+.approval-column .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.approval-column .btn {
+    width: 100%;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Highlight user's own courses */
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.border-start.border-primary {
+    border-left: 4px solid var(--bs-primary) !important;
+}
+
+/* Form enhancements */
+.form-label i {
+    color: var(--bs-primary);
+}
+
+.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Button hover effects */
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.btn-outline-info:hover {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+/* Loading states */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Thumbnail preview */
+#thumbnail-preview img {
+    border: 2px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin-top: 0.5rem;
+}
+
+/* Mobile responsive */
+media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 2px;
+        margin-right: 0;
+        width: 100%;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .approval-column {
+        min-width: 80px;
+    }
+    
+    .approval-column .btn {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .card-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .card-header .btn-group {
+        margin-top: 1rem;
+        width: 100%;
+    }
+}
+
+/* Animation improvements */
+.card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Role-specific styling */
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* Enhanced form styling */
+.form-select:focus,
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Pagination improvements */
+.pagination .page-link {
+    border-radius: 0.375rem;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-info) 100%);
+    border-color: var(--bs-primary);
+}
+
+.pagination .page-link:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: var(--bs-primary);
+}
+</style>

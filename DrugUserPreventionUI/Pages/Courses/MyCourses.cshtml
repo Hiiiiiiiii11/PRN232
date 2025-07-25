@@ -1,0 +1,569 @@
+﻿@page "/MyCourses"
+@model DrugUserPreventionUI.Pages.Courses.MyCoursesModel
+@{
+    ViewData["Title"] = "Khóa học của tôi";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-user-graduate me-2"></i>
+                        Khóa học của tôi
+                    </h2>
+                    <p class="text-muted mb-0">Quản lý và theo dõi tiến độ học tập của bạn</p>
+                </div>
+                <div>
+                    <a href="/Courses" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-1"></i>
+                        Tìm khóa học mới
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.MessageType == "success" ? "success" : Model.MessageType == "error" ? "danger" : "info") alert-dismissible fade show" role="alert">
+            <i class="fas fa-@(Model.MessageType == "success" ? "check-circle" : Model.MessageType == "error" ? "exclamation-triangle" : "info-circle") me-2"></i>
+            @Model.Message
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Learning Dashboard -->
+    @if (Model.Dashboard != null)
+    {
+        <div class="learning-dashboard mb-5">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="stat-card card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-book-open text-primary fa-2x"></i>
+                            </div>
+                            <h3 class="text-primary mb-1">@Model.Dashboard.TotalRegistrations</h3>
+                            <p class="text-muted mb-0">Tổng khóa học</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-play-circle text-warning fa-2x"></i>
+                            </div>
+                            <h3 class="text-warning mb-1">@Model.Dashboard.InProgressCourses</h3>
+                            <p class="text-muted mb-0">Đang học</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-check-circle text-success fa-2x"></i>
+                            </div>
+                            <h3 class="text-success mb-1">@Model.Dashboard.CompletedCourses</h3>
+                            <p class="text-muted mb-0">Hoàn thành</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-chart-line text-info fa-2x"></i>
+                            </div>
+                            <h3 class="text-info mb-1">@Model.Dashboard.OverallProgress.ToString("F1")%</h3>
+                            <p class="text-muted mb-0">Tiến độ chung</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filter and Search -->
+    <div class="filter-section mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="fas fa-search me-1"></i>
+                            Tìm kiếm
+                        </label>
+                        <input type="text" name="searchKeyword" class="form-control" placeholder="Tên khóa học..." value="@Model.FilterModel.SearchKeyword" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-filter me-1"></i>
+                            Trạng thái
+                        </label>
+                        <select name="status" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="Enrolled" selected="@(Model.FilterModel.Status == "Enrolled")">Đã đăng ký</option>
+                            <option value="InProgress" selected="@(Model.FilterModel.Status == "InProgress")">Đang học</option>
+                            <option value="Completed" selected="@(Model.FilterModel.Status == "Completed")">Hoàn thành</option>
+                            <option value="Dropped" selected="@(Model.FilterModel.Status == "Dropped")">Đã dừng</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-calendar me-1"></i>
+                            Sắp xếp theo
+                        </label>
+                        <select name="sortBy" class="form-select">
+                            <option value="RegistrationDate" selected="@(Model.FilterModel.SortBy == "RegistrationDate")">Ngày đăng ký</option>
+                            <option value="LastAccessDate" selected="@(Model.FilterModel.SortBy == "LastAccessDate")">Lần truy cập cuối</option>
+                            <option value="ProgressPercentage" selected="@(Model.FilterModel.SortBy == "ProgressPercentage")">Tiến độ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>
+                                Tìm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Courses List -->
+    @if (Model.Registrations.Any())
+    {
+        <div class="my-courses-section">
+            <div class="row g-4">
+                @foreach (var registration in Model.Registrations)
+                {
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="my-course-card card border-0 shadow-sm h-100">
+                            <div class="course-header position-relative">
+                                @if (!string.IsNullOrEmpty(registration.CourseThumbnail))
+                                {
+                                    <img src="@registration.CourseThumbnail" class="card-img-top" alt="@registration.CourseTitle" style="height: 180px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="placeholder-image bg-gradient-primary d-flex align-items-center justify-content-center" style="height: 180px;">
+                                        <i class="fas fa-graduation-cap fa-3x text-white opacity-50"></i>
+                                    </div>
+                                }
+
+                                <!-- Status Badge -->
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    @{
+                                        var statusInfo = GetStatusInfo(registration.Status);
+                                    }
+                                    <span class="badge @statusInfo.badgeClass">
+                                        <i class="fas @statusInfo.icon me-1"></i>
+                                        @statusInfo.text
+                                    </span>
+                                </div>
+
+                                <!-- Progress Bar -->
+                                <div class="progress position-absolute bottom-0 w-100" style="height: 4px; border-radius: 0;">
+                                    <div class="progress-bar @statusInfo.progressClass" role="progressbar"
+                                         style="width: @registration.ProgressPercentage%"
+                                         aria-valuenow="@registration.ProgressPercentage"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title mb-2">@registration.CourseTitle</h5>
+
+                                <div class="course-progress mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small class="text-muted">Tiến độ học tập</small>
+                                        <small class="fw-bold">@registration.ProgressPercentage.ToString("F1")%</small>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar @statusInfo.progressClass" role="progressbar"
+                                             style="width: @registration.ProgressPercentage%"
+                                             aria-valuenow="@registration.ProgressPercentage"
+                                             aria-valuemin="0" aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="course-info flex-grow-1">
+                                    <div class="row text-sm mb-2">
+                                        <div class="col-6">
+                                            <i class="fas fa-calendar-plus text-primary me-1"></i>
+                                            <small>Đăng ký: @registration.RegistrationDate.ToString("dd/MM/yyyy")</small>
+                                        </div>
+                                        <div class="col-6">
+                                            @if (registration.CompletionDate.HasValue)
+                                            {
+                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                                <small>Hoàn thành: @registration.CompletionDate.Value.ToString("dd/MM/yyyy")</small>
+                                            }
+                                            else if (registration.LastAccessDate.HasValue)
+                                            {
+                                                <i class="fas fa-clock text-info me-1"></i>
+                                                <small>Truy cập: @registration.LastAccessDate.Value.ToString("dd/MM/yyyy")</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="course-actions mt-auto">
+                                    <div class="d-flex gap-2">
+                                        @if (registration.Status == "Completed")
+                                        {
+                                            <a href="/Courses?action=detail&id=@registration.CourseID" class="btn btn-success flex-grow-1">
+                                                <i class="fas fa-certificate me-1"></i>
+                                                Xem chứng chỉ
+                                            </a>
+                                            <a href="/Learning/Course/@registration.CourseID" class="btn btn-outline-primary">
+                                                <i class="fas fa-redo me-1"></i>
+                                                Học lại
+                                            </a>
+                                        }
+                                        else if (registration.Status == "InProgress" || registration.Status == "Enrolled")
+                                        {
+                                            <a href="/Learning/Course/@registration.CourseID" class="btn btn-primary flex-grow-1">
+                                                <i class="fas fa-play me-1"></i>
+                                                Tiếp tục học
+                                            </a>
+                                            <form method="post" asp-page-handler="Unregister" class="d-inline">
+                                                <input type="hidden" name="courseId" value="@registration.CourseID" />
+                                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc muốn hủy đăng ký khóa học này?')" title="Hủy đăng ký">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <a href="/Courses?action=detail&id=@registration.CourseID" class="btn btn-outline-primary flex-grow-1">
+                                                <i class="fas fa-eye me-1"></i>
+                                                Xem chi tiết
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.PaginationInfo != null && Model.PaginationInfo.TotalPages > 1)
+            {
+                <nav aria-label="My courses pagination" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(Model.PaginationInfo.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" href="?pageIndex=@(Model.PaginationInfo.CurrentPage - 1)&searchKeyword=@Model.FilterModel.SearchKeyword&status=@Model.FilterModel.Status&sortBy=@Model.FilterModel.SortBy">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+
+                        @for (int i = Math.Max(1, Model.PaginationInfo.CurrentPage - 2); i <= Math.Min(Model.PaginationInfo.TotalPages, Model.PaginationInfo.CurrentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.PaginationInfo.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="?pageIndex=@i&searchKeyword=@Model.FilterModel.SearchKeyword&status=@Model.FilterModel.Status&sortBy=@Model.FilterModel.SortBy">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.PaginationInfo.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" href="?pageIndex=@(Model.PaginationInfo.CurrentPage + 1)&searchKeyword=@Model.FilterModel.SearchKeyword&status=@Model.FilterModel.Status&sortBy=@Model.FilterModel.SortBy">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="empty-state text-center py-5">
+            <div class="card border-0">
+                <div class="card-body py-5">
+                    <i class="fas fa-graduation-cap fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted mb-3">Bạn chưa đăng ký khóa học nào</h4>
+                    <p class="text-muted mb-4">
+                        Khám phá các khóa học phòng chống tệ nạn xã hội và bắt đầu hành trình học tập của bạn
+                    </p>
+                    <a href="/Courses" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>
+                        Tìm khóa học phù hợp
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    private (string badgeClass, string icon, string text, string progressClass) GetStatusInfo(string status)
+    {
+        return status switch
+        {
+            "Enrolled" => ("bg-info", "fa-user-plus", "Đã đăng ký", "bg-info"),
+            "InProgress" => ("bg-warning", "fa-play", "Đang học", "bg-warning"),
+            "Completed" => ("bg-success", "fa-check", "Hoàn thành", "bg-success"),
+            "Dropped" => ("bg-secondary", "fa-pause", "Đã dừng", "bg-secondary"),
+            _ => ("bg-secondary", "fa-question", "Không xác định", "bg-secondary")
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-submit filter form on select change
+            $('.filter-section select').on('change', function() {
+                $(this).closest('form').submit();
+            });
+
+            // Course card hover effects
+            $('.my-course-card').hover(
+                function() { $(this).addClass('shadow-lg').removeClass('shadow-sm'); },
+                function() { $(this).addClass('shadow-sm').removeClass('shadow-lg'); }
+            );
+
+            // Unregister form confirmation
+            $('form[asp-page-handler="Unregister"]').on('submit', function(e) {
+                const form = this;
+                const courseName = $(this).closest('.card').find('.card-title').text().trim();
+
+                if (!confirm(`Bạn có chắc muốn hủy đăng ký khóa học "${courseName}"?\n\nLưu ý: Tiến độ học tập của bạn sẽ bị mất.`)) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Add loading state
+                const btn = $(this).find('button[type="submit"]');
+                btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+            });
+
+            // Progress bar animation
+            $('.progress-bar').each(function() {
+                const width = $(this).attr('style').match(/width:\s*(\d+(?:\.\d+)?)/)[1];
+                $(this).css('width', '0%').animate({'width': width + '%'}, 1000);
+            });
+
+            // Search form enhancement
+            $('input[name="searchKeyword"]').on('keypress', function(e) {
+                if (e.which === 13) {
+                    $(this).closest('form').submit();
+                }
+            });
+        });
+
+        // Continue learning function
+        function continueLearning(courseId) {
+            // Add loading overlay
+            showLoadingOverlay();
+
+            // Navigate to learning page
+            window.location.href = `/Learning/Course/${courseId}`;
+        }
+
+        function showLoadingOverlay() {
+            if ($('#loading-overlay').length === 0) {
+                $('body').append(`
+                    <div id="loading-overlay" class="loading-overlay">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <div class="mt-2">Đang chuẩn bị khóa học...</div>
+                        </div>
+                    </div>
+                `);
+            }
+        }
+    </script>
+}
+
+<style>
+    /* My Courses specific styles */
+    .learning-dashboard {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        transition: all 0.3s ease;
+        border-radius: 1rem;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+        }
+
+    .stat-icon {
+        background: rgba(102, 126, 234, 0.1);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .my-course-card {
+        transition: all 0.3s ease;
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+        .my-course-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .course-header {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .course-header img {
+            transition: transform 0.3s ease;
+        }
+
+    .my-course-card:hover .course-header img {
+        transform: scale(1.05);
+    }
+
+    .placeholder-image {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    }
+
+    .progress {
+        border-radius: 10px;
+        background-color: rgba(0,0,0,0.1);
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+
+    .course-info small {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .course-actions .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .filter-section .card {
+        border-radius: 1rem;
+    }
+
+    .empty-state .card {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 1rem;
+    }
+
+    /* Status-specific styles */
+    .bg-info {
+        background-color: #17a2b8 !important;
+    }
+
+    .bg-warning {
+        background-color: #ffc107 !important;
+    }
+
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+
+    .bg-secondary {
+        background-color: #6c757d !important;
+    }
+
+    /* Responsive improvements */
+    media (max-width: 768px) {
+        .learning-dashboard
+
+    {
+        padding: 1.5rem;
+    }
+
+    .course-actions .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .course-actions .d-flex {
+        flex-direction: column;
+    }
+
+    .course-actions .flex-grow-1 {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    }
+
+    /* Animation improvements */
+    .my-course-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+        .my-course-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .my-course-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .my-course-card:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+    keyframes fadeInUp {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+    }
+</style>

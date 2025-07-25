@@ -1,0 +1,189 @@
+﻿@page "/Login"
+@model DrugUserPreventionUI.Pages.LoginModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="row w-100 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title mb-1">Đăng nhập hệ thống</h3>
+                        <p class="text-muted">Quản lý khóa học phòng chống tệ nạn xã hội</p>
+                    </div>
+
+                    <!-- Alert Messages -->
+                    @if (!string.IsNullOrEmpty(Model.Message))
+                    {
+                        <div class="alert alert-@(Model.MessageType == "success" ? "success" : Model.MessageType == "warning" ? "warning" : "danger") alert-dismissible fade show" role="alert">
+                            <i class="fas fa-@(Model.MessageType == "success" ? "check-circle" : Model.MessageType == "warning" ? "exclamation-triangle" : "exclamation-triangle") me-2"></i>
+                            @Model.Message
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Login Form -->
+                    <!-- Login Form -->
+                    <form method="post">
+                        <div class="mb-3">
+                            <label asp-for="LoginForm.Username" class="form-label" for="username-input">
+                                <i class="fas fa-user me-1"></i>
+                                Tên đăng nhập
+                            </label>
+                            <input asp-for="LoginForm.Username"
+                                   id="username-input"
+                                   class="form-control form-control-lg"
+                                   placeholder="admin"
+                                   autocomplete="username" />
+                            <span asp-validation-for="LoginForm.Username" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="LoginForm.Password" class="form-label" for="password-input">
+                                <i class="fas fa-lock me-1"></i>
+                                Mật khẩu
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="LoginForm.Password"
+                                       type="password"
+                                       id="password-input"
+                                       class="form-control form-control-lg"
+                                       placeholder="••••••••"
+                                       autocomplete="current-password" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="LoginForm.Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Đăng nhập
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Demo Accounts -->
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="text-center text-muted mb-3">Tài khoản demo:</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="fillDemoAccount('manager')">
+                                    <i class="fas fa-user-tie me-1"></i>
+                                    Manager
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="fillDemoAccount('consultant')">
+                                    <i class="fas fa-user-md me-1"></i>
+                                    Consultant
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block text-center mt-2">
+                            Click để điền sẵn thông tin demo
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-3">
+                <small class="text-white-50">
+                    © 2025 Drug User Prevention System. All rights reserved.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password-input'); // Sửa ID
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+
+        function fillDemoAccount(role) {
+            const usernameInput = document.getElementById('username-input'); // Sử dụng ID
+            const passwordInput = document.getElementById('password-input'); // Sử dụng ID
+
+            if (role === 'manager') {
+                usernameInput.value = 'manager';
+                passwordInput.value = 'Manager123!';
+            } else if (role === 'consultant') {
+                usernameInput.value = 'consultant';
+                passwordInput.value = 'Consultant123!';
+            }
+        }
+
+        // Auto dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                if (bootstrap && bootstrap.Alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    setTimeout(() => {
+                        try {
+                            bsAlert.close();
+                        } catch (e) {
+                            // Alert might already be closed
+                        }
+                    }, 5000);
+                }
+            });
+        }, 1000);
+
+        // Add loading state to submit button
+        document.querySelector('form').addEventListener('submit', function() {
+            const submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang đăng nhập...';
+            submitBtn.disabled = true;
+        });
+    </script>
+    }
+
+<style>
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card {
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 10px;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #5a67d8, #6b46c1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+</style>

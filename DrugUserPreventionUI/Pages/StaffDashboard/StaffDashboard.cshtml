@@ -1,0 +1,1151 @@
+﻿@page "/Staff/StaffDashboard"
+@model DrugUsePrevention.Pages.Staff.StaffDashboardModel
+@{
+    ViewData["Title"] = "Staff Dashboard";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<!-- Custom CSS for StaffDashboard -->
+<style>
+    /* Color Variables */
+    :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --text-primary: #2c3e50;
+        --text-secondary: #34495e;
+        --text-light: #6c757d;
+        --text-white: #ffffff;
+        --bg-primary: rgba(255, 255, 255, 0.95);
+        --bg-secondary: rgba(248, 249, 250, 0.9);
+        --bg-dark: rgba(52, 73, 94, 0.95);
+        --bg-glass: rgba(255, 255, 255, 0.85);
+        --border-light: rgba(0, 0, 0, 0.125);
+        --border-glass: rgba(255, 255, 255, 0.3);
+        --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
+        --shadow-heavy: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Main Container */
+    .staff-dashboard-container {
+        min-height: calc(100vh - 140px);
+        padding: 1.5rem;
+        margin-bottom: 3rem;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+
+    .main-content {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Glass morphism styling - Improved visibility */
+    .glass-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-glass);
+        box-shadow: var(--shadow-medium);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        color: var(--text-primary);
+    }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+    /* Section Headers */
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--bg-glass) 0%, rgba(255, 255, 255, 0.9) 100%);
+    }
+
+        .section-header h1 {
+            color: var(--text-primary);
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 2.5rem 2rem;
+        transition: transform 0.3s ease, background 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.95) 100%);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--primary-color);
+        }
+
+        .stat-card i {
+            font-size: 4rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .stat-card h3 {
+            color: var(--text-primary);
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+    /* Forms */
+    .create-form {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        border: 1px solid var(--border-glass);
+        box-shadow: var(--shadow-medium);
+    }
+
+        .create-form h3 {
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+    .form-label-glass {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: block;
+        font-size: 0.95rem;
+        letter-spacing: 0.3px;
+    }
+
+    .form-control-glass {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 12px;
+        color: var(--text-primary);
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        font-weight: 500;
+    }
+
+        .form-control-glass:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .form-control-glass::placeholder {
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+    /* Tables */
+    .table-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-medium);
+    }
+
+    .table {
+        color: var(--text-primary);
+        margin-bottom: 0;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+        .table th {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, rgba(52, 73, 94, 0.9) 100%);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: var(--text-white);
+            font-weight: 700;
+            padding: 1.25rem 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+
+        .table td {
+            border-color: var(--border-light);
+            padding: 1rem;
+            vertical-align: middle;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .table tbody tr {
+            transition: background-color 0.3s ease;
+        }
+
+            .table tbody tr:hover {
+                background: rgba(102, 126, 234, 0.05) !important;
+            }
+
+                .table tbody tr:hover td {
+                    background: rgba(102, 126, 234, 0.05);
+                }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 25px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+
+    .status-active {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(40, 167, 69, 0.25) 100%);
+        color: #1e7e34;
+        border: 1px solid var(--success-color);
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+    }
+
+    .status-inactive, .status-banned {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.25) 100%);
+        color: #bd2130;
+        border: 1px solid var(--danger-color);
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+    }
+
+    /* Custom Badges */
+    .badge {
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px;
+    }
+
+    .bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+        color: white;
+    }
+
+    .bg-info {
+        background: linear-gradient(135deg, var(--info-color) 0%, #138496 100%) !important;
+        color: white;
+    }
+
+    .bg-success {
+        background: linear-gradient(135deg, var(--success-color) 0%, #1e7e34 100%) !important;
+        color: white;
+    }
+
+    /* Buttons */
+    .btn-gradient-success {
+        background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-gradient-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+
+    .btn-gradient-danger {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #c82333 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 12px rgba(220, 53, 69, 0.3);
+    }
+
+        .btn-gradient-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(220, 53, 69, 0.4);
+            color: white;
+        }
+
+    .btn-gradient-warning {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #fd7e14 100%);
+        border: none;
+        color: var(--text-primary);
+        padding: 0.5rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 12px rgba(255, 193, 7, 0.3);
+    }
+
+        .btn-gradient-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(255, 193, 7, 0.4);
+            color: var(--text-primary);
+        }
+
+    .btn-gradient-primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-gradient-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+    .btn-sm {
+        padding: 0.4rem 1rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Action Forms */
+    .action-form {
+        display: inline-block;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Alert Messages */
+    .alert-custom {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+        border: 1px solid var(--border-glass);
+        border-radius: 15px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-light);
+        font-weight: 500;
+    }
+
+        .alert-custom i {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+    /* Detailed Statistics */
+    .detailed-stats {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-top: 2rem;
+        border: 1px solid var(--border-glass);
+    }
+
+        .detailed-stats h2 {
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .detailed-stats h5 {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .detailed-stats ul {
+            margin-bottom: 0;
+        }
+
+        .detailed-stats li {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+            .detailed-stats li:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+            }
+
+    /* Table Headers Styling */
+    .glass-card h2 {
+        color: var(--text-primary) !important;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Empty State Styling */
+    .table tbody tr td {
+        color: var(--text-light);
+    }
+
+    .table tbody tr:not(:hover) td {
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Strong elements in tables */
+    .table strong {
+        color: var(--text-primary);
+        font-weight: 700;
+    }
+
+    /* Responsive Design */
+    media (max-width: 768px) {
+        .staff-dashboard-container
+
+    {
+        padding: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .section-header h1 {
+        font-size: 2.2rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .create-form {
+        padding: 2rem;
+    }
+
+    .glass-card {
+        padding: 1.5rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .action-form {
+        margin-bottom: 0.75rem;
+    }
+
+    }
+
+    media (max-width: 576px) {
+        .stats-grid
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .stat-card h3 {
+        font-size: 2.5rem;
+    }
+
+    .btn-gradient-success,
+    .btn-gradient-primary {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    }
+
+    /* Ensure proper spacing at bottom */
+    .main-content > *:last-child {
+        margin-bottom: 4rem;
+    }
+
+    /* Loading animations */
+    keyframes fadeInUp {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .glass-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .stat-card:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .stat-card:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .stat-card:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .stat-card:nth-child(4) {
+        animation-delay: 0.4s;
+    }
+
+    /* Validation Error Styling */
+    .text-danger {
+        color: var(--danger-color) !important;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Focus states for better accessibility */
+    .btn-gradient-success:focus,
+    .btn-gradient-danger:focus,
+    .btn-gradient-warning:focus,
+    .btn-gradient-primary:focus {
+        outline: 2px solid rgba(102, 126, 234, 0.5);
+        outline-offset: 2px;
+    }
+</style>
+
+<!-- Alert Messages -->
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert-custom">
+        @if (Model.MessageType == "success")
+        {
+            <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+        }
+        else if (Model.MessageType == "error")
+        {
+            <i class="fas fa-exclamation-circle" style="color: var(--danger-color);"></i>
+        }
+        else if (Model.MessageType == "warning")
+        {
+            <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i>
+        }
+        else
+        {
+            <i class="fas fa-info-circle" style="color: var(--info-color);"></i>
+        }
+        @Model.Message
+    </div>
+}
+
+<div class="staff-dashboard-container">
+    <main class="main-content">
+        @* Dashboard Section *@
+        @if (Model.CurrentSection == "dashboard")
+        {
+            <div class="glass-card section-header">
+                <h1><i class="fas fa-chart-bar"></i> Dashboard Overview</h1>
+                <p>Tổng quan hoạt động hệ thống Drug Use Prevention</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="glass-card stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3>@Model.DashboardStats.TotalMembers</h3>
+                    <p>Tổng Members</p>
+                </div>
+                <div class="glass-card stat-card">
+                    <i class="fas fa-newspaper"></i>
+                    <h3>@Model.DashboardStats.TotalNews</h3>
+                    <p>Tổng News Articles</p>
+                </div>
+                <div class="glass-card stat-card">
+                    <i class="fas fa-list"></i>
+                    <h3>@Model.DashboardStats.TotalCategories</h3>
+                    <p>Tổng Categories</p>
+                </div>
+                <div class="glass-card stat-card">
+                    <i class="fas fa-tags"></i>
+                    <h3>@Model.DashboardStats.TotalTags</h3>
+                    <p>Tổng Tags</p>
+                </div>
+            </div>
+
+            @if (Model.DashboardStats.UsersByRole?.Any() == true || Model.DashboardStats.UsersByStatus?.Any() == true)
+            {
+                <div class="glass-card detailed-stats">
+                    <h2><i class="fas fa-chart-pie me-2"></i> Thống kê chi tiết</h2>
+                    <div class="row">
+                        @if (Model.DashboardStats.UsersByRole?.Any() == true)
+                        {
+                            <div class="col-md-6">
+                                <h5>Thống kê theo Role:</h5>
+                                <ul class="list-unstyled">
+                                    @foreach (var roleStats in Model.DashboardStats.UsersByRole)
+                                    {
+                                        <li><strong>@roleStats.Key:</strong> @roleStats.Value người</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        @if (Model.DashboardStats.UsersByStatus?.Any() == true)
+                        {
+                            <div class="col-md-6">
+                                <h5>Thống kê theo Status:</h5>
+                                <ul class="list-unstyled">
+                                    @foreach (var statusStats in Model.DashboardStats.UsersByStatus)
+                                    {
+                                        <li><strong>@statusStats.Key:</strong> @statusStats.Value người</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+
+        @* Members Section *@
+        @if (Model.CurrentSection == "members" && Model.UserCanManageMembers())
+        {
+            <div class="glass-card section-header">
+                <h1><i class="fas fa-users"></i> Quản lý Members</h1>
+                <p>Xem, tạo và quản lý tài khoản Members</p>
+            </div>
+
+            <!-- Create Member Form -->
+            <div class="create-form">
+                <h3><i class="fas fa-user-plus me-2"></i> Tạo Member mới</h3>
+                <form method="post" asp-page-handler="CreateMember">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="MemberForm.FullName" class="form-label-glass">Họ tên *</label>
+                                <input asp-for="MemberForm.FullName" class="form-control-glass" placeholder="Nhập họ tên đầy đủ" required>
+                                <span asp-validation-for="MemberForm.FullName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="MemberForm.Username" class="form-label-glass">Username *</label>
+                                <input asp-for="MemberForm.Username" class="form-control-glass" placeholder="Nhập username" required>
+                                <span asp-validation-for="MemberForm.Username" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="MemberForm.Email" class="form-label-glass">Email *</label>
+                                <input asp-for="MemberForm.Email" type="email" class="form-control-glass" placeholder="example@email.com" required>
+                                <span asp-validation-for="MemberForm.Email" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="MemberForm.Password" class="form-label-glass">Mật khẩu *</label>
+                                <input asp-for="MemberForm.Password" type="password" class="form-control-glass" placeholder="Nhập mật khẩu" required>
+                                <span asp-validation-for="MemberForm.Password" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="MemberForm.Phone" class="form-label-glass">Số điện thoại</label>
+                                <input asp-for="MemberForm.Phone" type="tel" class="form-control-glass" placeholder="0901234567">
+                                <span asp-validation-for="MemberForm.Phone" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-gradient-success">
+                                <i class="fas fa-save me-2"></i> Tạo Member
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Members List -->
+            <div class="glass-card">
+                <h2><i class="fas fa-users me-2"></i> Danh sách Members</h2>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ tên</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Members?.Any() == true)
+                            {
+                                @foreach (var member in Model.Members)
+                                {
+                                    <tr>
+                                        <td><strong>#@member.UserID</strong></td>
+                                        <td><strong>@member.FullName</strong></td>
+                                        <td>@member.Username</td>
+                                        <td>@member.Email</td>
+                                        <td>
+                                            <span class="status-badge status-@(member.Status?.ToLower())">@member.Status</span>
+                                        </td>
+                                        <td>@member.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @if (member.Status == "Active")
+                                            {
+                                                <form method="post" asp-page-handler="BanMember" asp-route-id="@member.UserID" class="action-form">
+                                                    <button type="submit" class="btn btn-gradient-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn ban Member này?')">
+                                                        <i class="fas fa-ban"></i> Ban
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form method="post" asp-page-handler="UnbanMember" asp-route-id="@member.UserID" class="action-form">
+                                                    <button type="submit" class="btn btn-gradient-success btn-sm">
+                                                        <i class="fas fa-check"></i> Unban
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center" style="padding: 3rem;">
+                                        <i class="fas fa-users fa-3x mb-3" style="display: block; opacity: 0.3; color: var(--text-light);"></i>
+                                        <span style="color: var(--text-light);">Không có Members nào</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        @* News Section *@
+        @if (Model.CurrentSection == "news" && Model.UserCanManageNews())
+        {
+            <div class="glass-card section-header">
+                <h1><i class="fas fa-newspaper"></i> Quản lý News</h1>
+                <p>Xem và quản lý các bài viết tin tức</p>
+            </div>
+
+            <div class="glass-card">
+                <h2><i class="fas fa-newspaper me-2"></i> Danh sách News</h2>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tiêu đề</th>
+                                <th>Category</th>
+                                <th>Tác giả</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.NewsArticles?.Any() == true)
+                            {
+                                @foreach (var news in Model.NewsArticles)
+                                {
+                                    <tr>
+                                        <td><strong>#@news.NewsArticleID</strong></td>
+                                        <td style="max-width: 250px;">
+                                            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;" title="@news.Title">
+                                                @news.Title
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">@(news.CategoryName ?? "N/A")</span>
+                                        </td>
+                                        <td>@(news.AuthorName ?? "N/A")</td>
+                                        <td>
+                                            <span class="status-badge status-@(news.IsActive == "Y" ? "active" : "inactive")">
+                                                @(news.IsActive == "Y" ? "Active" : "Inactive")
+                                            </span>
+                                        </td>
+                                        <td>@news.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <form method="post" asp-page-handler="ToggleNewsStatus" asp-route-id="@news.NewsArticleID" asp-route-status="@(news.IsActive == "Y" ? "N" : "Y")" class="action-form">
+                                                <button type="submit" class="btn btn-gradient-warning btn-sm" title="@(news.IsActive == "Active" ? "Active" : "Inactive")">
+                                                    <i class="fas fa-toggle-@(news.IsActive == "Y" ? "off" : "on")"></i>
+                                                    @(news.IsActive == "Active" ? "Active" : "Inactive")
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-page-handler="DeleteNews" asp-route-id="@news.NewsArticleID" class="action-form">
+                                                <button type="submit" class="btn btn-gradient-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa News này?')">
+                                                    <i class="fas fa-trash"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center" style="padding: 3rem;">
+                                        <i class="fas fa-newspaper fa-3x mb-3" style="display: block; opacity: 0.3; color: var(--text-light);"></i>
+                                        <span style="color: var(--text-light);">Không có News nào</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        @* Categories Section *@
+        @if (Model.CurrentSection == "categories" && Model.UserCanManageCategories())
+        {
+            <div class="glass-card section-header">
+                <h1><i class="fas fa-list"></i> Quản lý Categories</h1>
+                <p>Quản lý danh mục bài viết</p>
+            </div>
+
+            <!-- Create Category Form -->
+            <div class="create-form">
+                <h3><i class="fas fa-list me-2"></i> Tạo Category mới</h3>
+                <form method="post" asp-page-handler="CreateCategory">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="CategoryForm.CategoryName" class="form-label-glass">Tên danh mục *</label>
+                                <input asp-for="CategoryForm.CategoryName" class="form-control-glass" placeholder="Nhập tên danh mục" required>
+                                <span asp-validation-for="CategoryForm.CategoryName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="CategoryForm.Description" class="form-label-glass">Mô tả</label>
+                                <textarea asp-for="CategoryForm.Description" class="form-control-glass" rows="3" placeholder="Mô tả về danh mục này..."></textarea>
+                                <span asp-validation-for="CategoryForm.Description" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-gradient-success">
+                                <i class="fas fa-save me-2"></i> Tạo Category
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Categories List -->
+            <div class="glass-card">
+                <h2><i class="fas fa-list me-2"></i> Danh sách Categories</h2>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên danh mục</th>
+                                <th>Mô tả</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Categories?.Any() == true)
+                            {
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <tr>
+                                        <td><strong>#@category.CategoryID</strong></td>
+                                        <td><strong>@category.CategoryName</strong></td>
+                                        <td style="max-width: 300px;">
+                                            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@(category.Description ?? "N/A")">
+                                                @(category.Description ?? "Không có mô tả")
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-@(category.IsActive == "Y" ? "active" : "inactive")">
+                                                @(category.IsActive == "Y" ? "Active" : "Inactive")
+                                            </span>
+                                        </td>
+                                        <td>@category.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <form method="post" asp-page-handler="DeleteCategory" asp-route-id="@category.CategoryID" class="action-form">
+                                                <button type="submit" class="btn btn-gradient-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa Category này?')">
+                                                    <i class="fas fa-trash"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center" style="padding: 3rem;">
+                                        <i class="fas fa-list fa-3x mb-3" style="display: block; opacity: 0.3; color: var(--text-light);"></i>
+                                        <span style="color: var(--text-light);">Không có Categories nào</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        @* Tags Section *@
+        @if (Model.CurrentSection == "tags" && Model.UserCanManageTags())
+        {
+            <div class="glass-card section-header">
+                <h1><i class="fas fa-tags"></i> Quản lý Tags</h1>
+                <p>Quản lý các thẻ tag cho bài viết</p>
+            </div>
+
+            <!-- Create Tag Form -->
+            <div class="create-form">
+                <h3><i class="fas fa-tags me-2"></i> Tạo Tag mới</h3>
+                <form method="post" asp-page-handler="CreateTag">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="TagForm.TagName" class="form-label-glass">Tên tag *</label>
+                                <input asp-for="TagForm.TagName" class="form-control-glass" placeholder="Nhập tên tag" required>
+                                <span asp-validation-for="TagForm.TagName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="TagForm.Description" class="form-label-glass">Mô tả</label>
+                                <textarea asp-for="TagForm.Description" class="form-control-glass" rows="3" placeholder="Mô tả về tag này..."></textarea>
+                                <span asp-validation-for="TagForm.Description" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-gradient-success">
+                                <i class="fas fa-save me-2"></i> Tạo Tag
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tags List -->
+            <div class="glass-card">
+                <h2><i class="fas fa-tags me-2"></i> Danh sách Tags</h2>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên tag</th>
+                                <th>Mô tả</th>
+                                <th>Số lượng sử dụng</th>
+                                <th>Ngày tạo</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Tags?.Any() == true)
+                            {
+                                @foreach (var tag in Model.Tags)
+                                {
+                                    <tr>
+                                        <td><strong>#@tag.TagID</strong></td>
+                                        <td>
+                                            <span class="badge bg-info">@tag.TagName</span>
+                                        </td>
+                                        <td style="max-width: 300px;">
+                                            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@(tag.Description ?? "N/A")">
+                                                @(tag.Description ?? "Không có mô tả")
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">@(tag.UsageCount ?? 0) lần</span>
+                                        </td>
+                                        <td>@tag.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <form method="post" asp-page-handler="DeleteTag" asp-route-id="@tag.TagID" class="action-form">
+                                                <button type="submit" class="btn btn-gradient-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa Tag này?')">
+                                                    <i class="fas fa-trash"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center" style="padding: 3rem;">
+                                        <i class="fas fa-tags fa-3x mb-3" style="display: block; opacity: 0.3; color: var(--text-light);"></i>
+                                        <span style="color: var(--text-light);">Không có Tags nào</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        @* Profile Section *@
+        @if (Model.CurrentSection == "profile")
+        {
+            <div class="glass-card section-header">
+                <h1><i class="fas fa-user-cog"></i> Profile Settings</h1>
+                <p>Quản lý thông tin cá nhân và đổi mật khẩu</p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="create-form">
+                        <h3><i class="fas fa-user-edit me-2"></i> Cập nhật Profile</h3>
+                        <form method="post" asp-page-handler="UpdateProfile">
+                            <div class="mb-3">
+                                <label asp-for="ProfileForm.FullName" class="form-label-glass">Họ tên *</label>
+                                <input asp-for="ProfileForm.FullName" class="form-control-glass" placeholder="Nhập họ tên đầy đủ" required>
+                                <span asp-validation-for="ProfileForm.FullName" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ProfileForm.Username" class="form-label-glass">Username *</label>
+                                <input asp-for="ProfileForm.Username" class="form-control-glass" placeholder="Nhập username" required>
+                                <span asp-validation-for="ProfileForm.Username" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ProfileForm.Email" class="form-label-glass">Email *</label>
+                                <input asp-for="ProfileForm.Email" type="email" class="form-control-glass" placeholder="example@email.com" required>
+                                <span asp-validation-for="ProfileForm.Email" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ProfileForm.Phone" class="form-label-glass">Số điện thoại</label>
+                                <input asp-for="ProfileForm.Phone" type="tel" class="form-control-glass" placeholder="0901234567">
+                                <span asp-validation-for="ProfileForm.Phone" class="text-danger"></span>
+                            </div>
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="fas fa-save me-2"></i> Cập nhật Profile
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="create-form">
+                        <h3><i class="fas fa-key me-2"></i> Đổi mật khẩu</h3>
+                        <form method="post" asp-page-handler="ChangePassword">
+                            <div class="mb-3">
+                                <label asp-for="ChangePasswordForm.OldPassword" class="form-label-glass">Mật khẩu cũ *</label>
+                                <input asp-for="ChangePasswordForm.OldPassword" type="password" class="form-control-glass" placeholder="Nhập mật khẩu hiện tại" required>
+                                <span asp-validation-for="ChangePasswordForm.OldPassword" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ChangePasswordForm.NewPassword" class="form-label-glass">Mật khẩu mới *</label>
+                                <input asp-for="ChangePasswordForm.NewPassword" type="password" class="form-control-glass" placeholder="Nhập mật khẩu mới" required>
+                                <span asp-validation-for="ChangePasswordForm.NewPassword" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ChangePasswordForm.ConfirmPassword" class="form-label-glass">Xác nhận mật khẩu mới *</label>
+                                <input asp-for="ChangePasswordForm.ConfirmPassword" type="password" class="form-control-glass" placeholder="Nhập lại mật khẩu mới" required>
+                                <span asp-validation-for="ChangePasswordForm.ConfirmPassword" class="text-danger"></span>
+                            </div>
+                            <button type="submit" class="btn btn-gradient-warning">
+                                <i class="fas fa-key me-2"></i> Đổi mật khẩu
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </main>
+</div>
