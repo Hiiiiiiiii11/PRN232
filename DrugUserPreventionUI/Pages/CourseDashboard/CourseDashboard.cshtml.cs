@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json;
 using DrugUserPreventionUI.Models.CourseDashboard;
@@ -26,6 +27,9 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
 
         [BindProperty]
         public CreateCourseDto CourseForm { get; set; } = new CreateCourseDto();
+
+        [BindProperty]
+        public ProfileForm ProfileForm { get; set; } = new ProfileForm();
 
         // Helper methods to get user info from JWT token
         private LoginModel GetLoginModel()
@@ -152,6 +156,16 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
                                 new { message = "Bạn không có quyền tạo khóa học mới.", messageType = "error" });
                         }
                         CourseForm = new CreateCourseDto();
+                        break;
+                    case "profile":
+                        // Populate ProfileForm with current user data
+                        var currentUser = GetCurrentUser();
+                        if (currentUser != null)
+                        {
+                            ProfileForm.FullName = currentUser.DisplayName ?? "";
+                            ProfileForm.Email = currentUser.Email ?? "";
+                            // Phone, DateOfBirth, Gender would need to be loaded from API if needed
+                        }
                         break;
                 }
             }
@@ -467,6 +481,92 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
             {
                 return RedirectToPage("/CourseDashboard/CourseDashboard",
                     new { message = $"Lỗi: {ex.Message}", messageType = "error" });
+            }
+        }
+
+        public async Task<IActionResult> OnPostUpdateProfileAsync()
+        {
+            // Check authentication first
+            if (!IsAuthenticated())
+            {
+                return RedirectToPage("/CourseDashboard/CourseDashboard", new { 
+                    message = "Vui lòng đăng nhập để truy cập trang này.", 
+                    messageType = "warning" 
+                });
+            }
+
+            // Check if user is Consultant or has appropriate role
+            var userRole = GetUserRole();
+            if (userRole != "Consultant" && userRole != "Staff" && userRole != "Manager" && userRole != "Admin")
+            {
+                return RedirectToPage("/CourseDashboard/CourseDashboard", new { 
+                    message = "Bạn không có quyền thực hiện chức năng này.", 
+                    messageType = "error" 
+                });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return RedirectToPage("/CourseDashboard/CourseDashboard", new { 
+                    action = "profile", 
+                    message = "Vui lòng kiểm tra thông tin nhập vào.", 
+                    messageType = "error" 
+                });
+            }
+
+            try
+            {
+                var client = GetAuthenticatedClient();
+                var currentUser = GetCurrentUser();
+                
+                if (currentUser == null)
+                {
+                    return RedirectToPage("/CourseDashboard/CourseDashboard", new { 
+                        message = "Không thể xác định thông tin người dùng.", 
+                        messageType = "error" 
+                    });
+                }
+
+                var updateRequest = new
+                {
+                    UserId = currentUser.UserId,
+                    FullName = ProfileForm.FullName,
+                    Email = ProfileForm.Email,
+                    Phone = ProfileForm.Phone,
+                    DateOfBirth = ProfileForm.DateOfBirth,
+                    Gender = ProfileForm.Gender
+                };
+
+                var json = JsonSerializer.Serialize(updateRequest);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await client.PutAsync($"https://localhost:7045/api/User/{currentUser.UserId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return RedirectToPage("/CourseDashboard/CourseDashboard", new { 
+                        action = "profile", 
+                        message = "Cập nhật thông tin thành công!", 
+                        messageType = "success" 
+                    });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return RedirectToPage("/CourseDashboard/CourseDashboard", new { 
+                        action = "profile", 
+                        message = $"Lỗi cập nhật: {response.StatusCode}", 
+                        messageType = "error" 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return RedirectToPage("/CourseDashboard/CourseDashboard", new { 
+                    action = "profile", 
+                    message = $"Lỗi: {ex.Message}", 
+                    messageType = "error" 
+                });
             }
         }
 

@@ -26,13 +26,20 @@ namespace DrugUserPreventionUI.Pages
 
         public async Task<IActionResult> OnGetAsync(
             string? message = null,
-            string? messageType = null
+            string? messageType = null,
+            string? returnUrl = null
         )
         {
             if (!string.IsNullOrEmpty(message))
             {
                 Message = message;
                 MessageType = messageType ?? "info";
+            }
+
+            // Store returnUrl in ViewData for use in POST
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                ViewData["ReturnUrl"] = returnUrl;
             }
 
             // Check if already logged in by checking and decoding token
@@ -42,7 +49,11 @@ namespace DrugUserPreventionUI.Pages
                 var userInfo = DecodeJwtToken(token);
                 if (userInfo != null && IsTokenValid(token))
                 {
-                    // User is already logged in, redirect to appropriate page
+                    // User is already logged in, redirect to returnUrl or appropriate role page
+                    if (!string.IsNullOrEmpty(returnUrl) && IsValidReturnUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
+                    }
                     return RedirectToRoleBasedPage(userInfo.Role);
                 }
                 else
@@ -56,10 +67,15 @@ namespace DrugUserPreventionUI.Pages
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
             if (!ModelState.IsValid)
             {
+                // Preserve returnUrl in ViewData if validation fails
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    ViewData["ReturnUrl"] = returnUrl;
+                }
                 return Page();
             }
 
@@ -129,7 +145,12 @@ namespace DrugUserPreventionUI.Pages
                                 Console.WriteLine($"UserId: {userInfo.UserId}");
                                 Console.WriteLine($"Expires: {userInfo.Expiration}");
 
-                                // Redirect based on user role
+                                // Redirect to returnUrl or role-based page
+                                if (!string.IsNullOrEmpty(returnUrl) && IsValidReturnUrl(returnUrl))
+                                {
+                                    return Redirect(returnUrl);
+                                }
+                                
                                 return RedirectToRoleBasedPage(
                                     userInfo.Role,
                                     $"Xin chào {userInfo.DisplayName}! Đăng nhập thành công."
@@ -453,6 +474,29 @@ namespace DrugUserPreventionUI.Pages
                     "Guest" // Guest is default for unknown roles
                 ,
             };
+        }
+
+        // Validate returnUrl to prevent open redirect attacks
+        private bool IsValidReturnUrl(string returnUrl)
+        {
+            if (string.IsNullOrEmpty(returnUrl))
+                return false;
+
+            // Only allow relative URLs that start with /
+            if (!returnUrl.StartsWith("/"))
+                return false;
+
+            // Prevent double slashes which could be used for external redirects
+            if (returnUrl.StartsWith("//"))
+                return false;
+
+            // Allow common pages
+            var allowedPaths = new[] { 
+                "/Profile", "/Courses", "/MyCourses", "/Dashboard", 
+                "/AdminDashboard", "/StaffDashboard", "/CourseDashboard" 
+            };
+
+            return allowedPaths.Any(path => returnUrl.StartsWith(path, StringComparison.OrdinalIgnoreCase));
         }
     }
 

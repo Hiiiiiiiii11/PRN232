@@ -826,15 +826,7 @@
                                             Chuyên gia
                                         </a>
                                     </li>
-@*                                     @if (isMember || isConsultant || isAdmin)
-                                    {
-                                        <li class="nav-item">
-                                            <a class="nav-link" asp-area="" asp-page="/MyCourses">
-                                                <i class="fas fa-user-graduate me-1"></i>
-                                                Khóa học của tôi
-                                            </a>
-                                        </li>
-                                    } *@
+                                   
                                     <!-- ✅ MANAGEMENT NAVIGATION -->
                                    @if (isConsultant || isStaff || isManager)
                                    {
@@ -969,12 +961,13 @@
                                                    Hồ sơ cá nhân
                                                </a>
                                            </li>
-@*                                            <li>
-                                               <a class="dropdown-item" asp-area="" asp-page="/Settings">
-                                                   <i class="fas fa-cog me-2"></i>
-                                                   Cài đặt
-                                               </a>
-                                           </li> *@
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item" asp-area="" asp-page="/Courses/MyCourses">
+                                                    <i class="fas fa-user-edit me-2"></i>
+                                                    Khoá học của tôi
+                                                </a>
+                                            </li>
                                            <li><hr class="dropdown-divider"></li>
                                            <li>
                                                <form method="post" asp-page="/Login" asp-page-handler="Logout" style="display: inline;">

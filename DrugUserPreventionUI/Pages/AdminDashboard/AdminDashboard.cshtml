@@ -47,6 +47,11 @@
                             <i class="fas fa-user-plus me-1"></i>
                             Thêm tài khoản
                         </a>
+
+                        <a href="?action=profile" class="btn btn-outline-secondary">
+                            <i class="fas fa-user-edit me-1"></i>
+                            Profile
+                        </a>
                         
                         <a href="/CourseDashboard" class="btn btn-outline-info">
                             <i class="fas fa-graduation-cap me-1"></i>
@@ -742,6 +747,66 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        }
+
+        <!-- Profile Management -->
+        @if (Model.CurrentAction == "profile")
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0">Quản lý Profile</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Thông tin hiện tại</h6>
+                                    <p><strong>Tên:</strong> @displayName</p>
+                                    <p><strong>Email:</strong> @(currentUser?.Email ?? "")</p>
+                                    <p><strong>Role:</strong> @userRole</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <form method="post" asp-page-handler="UpdateProfile">
+                                        <div class="mb-3">
+                                            <label asp-for="ProfileForm.FullName" class="form-label">Họ và tên</label>
+                                            <input asp-for="ProfileForm.FullName" class="form-control" value="@displayName" />
+                                            <span asp-validation-for="ProfileForm.FullName" class="text-danger"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="ProfileForm.Email" class="form-label">Email</label>
+                                            <input asp-for="ProfileForm.Email" class="form-control" type="email" value="@(currentUser?.Email ?? "")" />
+                                            <span asp-validation-for="ProfileForm.Email" class="text-danger"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="ProfileForm.Phone" class="form-label">Số điện thoại</label>
+                                            <input asp-for="ProfileForm.Phone" class="form-control" />
+                                            <span asp-validation-for="ProfileForm.Phone" class="text-danger"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="ProfileForm.DateOfBirth" class="form-label">Ngày sinh</label>
+                                            <input asp-for="ProfileForm.DateOfBirth" type="date" class="form-control" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="ProfileForm.Gender" class="form-label">Giới tính</label>
+                                            <select asp-for="ProfileForm.Gender" class="form-select">
+                                                <option value="">Chọn giới tính</option>
+                                                <option value="Male">Nam</option>
+                                                <option value="Female">Nữ</option>
+                                                <option value="Other">Khác</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i>
+                                            Cập nhật Profile
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         }

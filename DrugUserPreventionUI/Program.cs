@@ -4,6 +4,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 
+// ✅ Add Authentication & Authorization
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
+    {
+        options.LoginPath = "/Login";
+        options.LogoutPath = "/Login?handler=Logout";
+        options.AccessDeniedPath = "/Login";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
+        options.Cookie.Name = ".DrugPrevention.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
+
+builder.Services.AddAuthorization();
+
 // ✅ Add session support
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -31,6 +48,9 @@ app.UseRouting();
 
 // ✅ IMPORTANT: UseSession() must be AFTER UseRouting() but BEFORE UseAuthorization()
 app.UseSession();
+
+// ✅ Add Authentication & Authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();

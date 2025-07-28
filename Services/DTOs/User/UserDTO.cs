@@ -18,5 +18,7 @@ namespace Services.DTOs.User
         public string? Status { get; set; } // Active, Inactive, Banned
         public DateTime CreatedAt { get; set; }
         public DateTime DateOfBirth { get; set; }
+        public string? Gender { get; set; } // Male, Female, Other
+        public bool IsEmailVerified { get; set; } = false;
     }
 }
