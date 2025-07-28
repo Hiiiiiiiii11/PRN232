@@ -36,10 +36,10 @@ namespace DrugUserPreventionUI.Pages
         public async Task<IActionResult> OnGetAsync()
         {
             // Check if user is logged in
-            var token = HttpContext.Session.GetString("JWTToken");
+            var token = HttpContext.Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(token))
             {
-                return RedirectToPage("/Login");
+                return RedirectToPage("/Login", new { returnUrl = "/Profile" });
             }
 
             try
@@ -59,10 +59,10 @@ namespace DrugUserPreventionUI.Pages
         public async Task<IActionResult> OnPostUpdateProfileAsync()
         {
             // Check if user is logged in
-            var token = HttpContext.Session.GetString("JWTToken");
+            var token = HttpContext.Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(token))
             {
-                return RedirectToPage("/Login");
+                return RedirectToPage("/Login", new { returnUrl = "/Profile" });
             }
 
             if (!ModelState.IsValid)
@@ -115,10 +115,10 @@ namespace DrugUserPreventionUI.Pages
         public async Task<IActionResult> OnPostChangePasswordAsync()
         {
             // Check if user is logged in
-            var token = HttpContext.Session.GetString("JWTToken");
+            var token = HttpContext.Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(token))
             {
-                return RedirectToPage("/Login");
+                return RedirectToPage("/Login", new { returnUrl = "/Profile" });
             }
 
             if (!ModelState.IsValid)
@@ -175,10 +175,10 @@ namespace DrugUserPreventionUI.Pages
         public async Task<IActionResult> OnPostUploadAvatarAsync(IFormFile AvatarFile)
         {
             // Check if user is logged in
-            var token = HttpContext.Session.GetString("JWTToken");
+            var token = HttpContext.Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(token))
             {
-                return RedirectToPage("/Login");
+                return RedirectToPage("/Login", new { returnUrl = "/Profile" });
             }
 
             if (AvatarFile == null || AvatarFile.Length == 0)
@@ -263,7 +263,7 @@ namespace DrugUserPreventionUI.Pages
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var token = HttpContext.Session.GetString("JWTToken");
+                var token = HttpContext.Request.Cookies["auth_token"];
                 
                 if (string.IsNullOrEmpty(token))
                 {
@@ -311,7 +311,7 @@ namespace DrugUserPreventionUI.Pages
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var token = HttpContext.Session.GetString("JWTToken");
+                var token = HttpContext.Request.Cookies["auth_token"];
                 
                 if (string.IsNullOrEmpty(token))
                 {

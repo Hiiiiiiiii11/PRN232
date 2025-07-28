@@ -28,6 +28,9 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
         [BindProperty]
         public CreateUserForm UserForm { get; set; } = new CreateUserForm();
 
+        [BindProperty]
+        public ProfileForm ProfileForm { get; set; } = new ProfileForm();
+
         // Helper methods to get user info from JWT token
         private LoginModel GetLoginModel()
         {
@@ -100,6 +103,18 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
             {
                 Message = message;
                 MessageType = messageType ?? "info";
+            }
+
+            // Populate ProfileForm with current user data when action is profile
+            if (CurrentAction == "profile")
+            {
+                var currentUser = GetCurrentUser();
+                if (currentUser != null)
+                {
+                    ProfileForm.FullName = currentUser.DisplayName ?? "";
+                    ProfileForm.Email = currentUser.Email ?? "";
+                    // Phone, DateOfBirth, Gender would need to be loaded from API if needed
+                }
             }
 
             // Store filter values for view
@@ -570,6 +585,92 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
                     "/AdminDashboard",
                     new { message = $"Lỗi: {ex.Message}", messageType = "error" }
                 );
+            }
+        }
+
+        public async Task<IActionResult> OnPostUpdateProfileAsync()
+        {
+            // Check authentication first
+            if (!IsAuthenticated())
+            {
+                return RedirectToPage("/AdminDashboard", new { 
+                    message = "Vui lòng đăng nhập để truy cập trang này.", 
+                    messageType = "warning" 
+                });
+            }
+
+            // Check if user is Admin
+            var userRole = GetUserRole();
+            if (userRole != "Admin")
+            {
+                return RedirectToPage("/AdminDashboard", new { 
+                    message = "Bạn không có quyền thực hiện chức năng này.", 
+                    messageType = "error" 
+                });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return RedirectToPage("/AdminDashboard", new { 
+                    action = "profile", 
+                    message = "Vui lòng kiểm tra thông tin nhập vào.", 
+                    messageType = "error" 
+                });
+            }
+
+            try
+            {
+                var client = GetAuthenticatedClient();
+                var currentUser = GetCurrentUser();
+                
+                if (currentUser == null)
+                {
+                    return RedirectToPage("/AdminDashboard", new { 
+                        message = "Không thể xác định thông tin người dùng.", 
+                        messageType = "error" 
+                    });
+                }
+
+                var updateRequest = new
+                {
+                    UserId = currentUser.UserId,
+                    FullName = ProfileForm.FullName,
+                    Email = ProfileForm.Email,
+                    Phone = ProfileForm.Phone,
+                    DateOfBirth = ProfileForm.DateOfBirth,
+                    Gender = ProfileForm.Gender
+                };
+
+                var json = JsonSerializer.Serialize(updateRequest);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await client.PutAsync($"https://localhost:7045/api/User/{currentUser.UserId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return RedirectToPage("/AdminDashboard", new { 
+                        action = "profile", 
+                        message = "Cập nhật thông tin thành công!", 
+                        messageType = "success" 
+                    });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return RedirectToPage("/AdminDashboard", new { 
+                        action = "profile", 
+                        message = $"Lỗi cập nhật: {response.StatusCode}", 
+                        messageType = "error" 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return RedirectToPage("/AdminDashboard", new { 
+                    action = "profile", 
+                    message = $"Lỗi: {ex.Message}", 
+                    messageType = "error" 
+                });
             }
         }
 
