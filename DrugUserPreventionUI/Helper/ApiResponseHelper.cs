@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using DrugUserPreventionUI.Models.Common;
 
-namespace DrugUserPreventionUI.Helpers
+namespace DrugUserPreventionUI.Helper
 {
     public static class ApiResponseHelper
     {

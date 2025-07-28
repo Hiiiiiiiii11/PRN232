@@ -1,0 +1,450 @@
+@page
+@model DrugUserPreventionUI.Pages.ProfileModel
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-user-circle me-2 text-primary"></i>
+                        Hồ sơ cá nhân
+                    </h1>
+                    <p class="text-muted mb-0">Quản lý thông tin cá nhân và tài khoản của bạn</p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @Model.SuccessMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    @Model.ErrorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="row">
+                <!-- Profile Information Card -->
+                <div class="col-xl-4 col-lg-5">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body text-center py-5">
+                            <!-- Avatar -->
+                            <div class="position-relative d-inline-block mb-4">
+                                <div class="avatar-large mx-auto">
+                                    @if (!string.IsNullOrEmpty(Model.CurrentUser?.AvatarUrl))
+                                    {
+                                        <img src="@Model.CurrentUser.AvatarUrl" alt="Avatar" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 3rem;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute" style="bottom: 0; right: 0; width: 35px; height: 35px;" data-bs-toggle="modal" data-bs-target="#avatarModal">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+
+                            <!-- User Info -->
+                            <h4 class="mb-1">@Model.CurrentUser?.FullName</h4>
+                            <p class="text-muted mb-2">@Model.CurrentUser?.Email</p>
+                            <span class="badge bg-@(Model.GetRoleBadgeClass()) fs-6 px-3 py-2">
+                                <i class="fas fa-@(Model.GetRoleIcon()) me-1"></i>
+                                @Model.CurrentUser?.Role
+                            </span>
+
+                            <hr class="my-4">
+
+                            <!-- Quick Stats -->
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h5 class="mb-0 text-primary">@Model.UserStats?.CompletedCourses</h5>
+                                        <small class="text-muted">Khóa học</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h5 class="mb-0 text-success">@Model.UserStats?.TotalAppointments</h5>
+                                        <small class="text-muted">Cuộc hẹn</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="mb-0 text-info">@Model.GetMembershipDuration()</h5>
+                                    <small class="text-muted">Thành viên</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Status Card -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <h6 class="mb-0">
+                                <i class="fas fa-shield-alt me-2 text-success"></i>
+                                Trạng thái tài khoản
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Email xác thực</span>
+                                @if (Model.CurrentUser?.IsEmailVerified == true)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Đã xác thực
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-exclamation me-1"></i>Chưa xác thực
+                                    </span>
+                                }
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Trạng thái</span>
+                                <span class="badge bg-@(Model.CurrentUser?.Status == "Active" ? "success" : "secondary")">
+                                    @Model.CurrentUser?.Status
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Ngày tham gia</span>
+                                <small class="text-muted">@Model.CurrentUser?.CreatedAt.ToString("dd/MM/yyyy")</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Form -->
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-transparent border-0">
+                            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-info" type="button">
+                                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#security" type="button">
+                                        <i class="fas fa-lock me-2"></i>Bảo mật
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#activity" type="button">
+                                        <i class="fas fa-history me-2"></i>Hoạt động
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <!-- Profile Information Tab -->
+                                <div class="tab-pane fade show active" id="profile-info">
+                                    <form method="post" asp-page-handler="UpdateProfile">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" asp-for="ProfileForm.FullName" required>
+                                                <span asp-validation-for="ProfileForm.FullName" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Tên đăng nhập</label>
+                                                <input type="text" class="form-control" value="@Model.CurrentUser?.Username" readonly>
+                                                <small class="text-muted">Tên đăng nhập không thể thay đổi</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                                <input type="email" class="form-control" asp-for="ProfileForm.Email" required>
+                                                <span asp-validation-for="ProfileForm.Email" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Số điện thoại</label>
+                                                <input type="tel" class="form-control" asp-for="ProfileForm.Phone">
+                                                <span asp-validation-for="ProfileForm.Phone" class="text-danger"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Ngày sinh</label>
+                                                <input type="date" class="form-control" asp-for="ProfileForm.DateOfBirth">
+                                                <span asp-validation-for="ProfileForm.DateOfBirth" class="text-danger"></span>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Giới tính</label>
+                                                <select class="form-select" asp-for="ProfileForm.Gender">
+                                                    <option value="">Chọn giới tính</option>
+                                                    <option value="Male">Nam</option>
+                                                    <option value="Female">Nữ</option>
+                                                    <option value="Other">Khác</option>
+                                                </select>
+                                                <span asp-validation-for="ProfileForm.Gender" class="text-danger"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Vai trò</label>
+                                            <input type="text" class="form-control" value="@Model.CurrentUser?.Role" readonly>
+                                            <small class="text-muted">Vai trò được quản lý bởi quản trị viên</small>
+                                        </div>
+
+                                        <div class="d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Security Tab -->
+                                <div class="tab-pane fade" id="security">
+                                    <div class="mb-4">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-key me-2 text-warning"></i>
+                                            Đổi mật khẩu
+                                        </h6>
+                                        <form method="post" asp-page-handler="ChangePassword">
+                                            <div class="mb-3">
+                                                <label class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                                                <input type="password" class="form-control" asp-for="PasswordForm.CurrentPassword" required>
+                                                <span asp-validation-for="PasswordForm.CurrentPassword" class="text-danger"></span>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                                                <input type="password" class="form-control" asp-for="PasswordForm.NewPassword" required>
+                                                <span asp-validation-for="PasswordForm.NewPassword" class="text-danger"></span>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                                                <input type="password" class="form-control" asp-for="PasswordForm.ConfirmPassword" required>
+                                                <span asp-validation-for="PasswordForm.ConfirmPassword" class="text-danger"></span>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="fas fa-shield-alt me-2"></i>Đổi mật khẩu
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <hr>
+
+                                    <div>
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-history me-2 text-info"></i>
+                                            Lịch sử đăng nhập gần đây
+                                        </h6>
+                                        <div class="list-group list-group-flush">
+                                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-desktop text-primary me-2"></i>
+                                                    <strong>Windows PC</strong> - Chrome
+                                                    <br>
+                                                    <small class="text-muted">192.168.1.100</small>
+                                                </div>
+                                                <small class="text-muted">Hôm nay, 10:30</small>
+                                            </div>
+                                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-mobile-alt text-success me-2"></i>
+                                                    <strong>Mobile</strong> - Safari
+                                                    <br>
+                                                    <small class="text-muted">192.168.1.105</small>
+                                                </div>
+                                                <small class="text-muted">Hôm qua, 15:45</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Activity Tab -->
+                                <div class="tab-pane fade" id="activity">
+                                    <div class="timeline">
+                                        @if (Model.RecentActivities?.Any() == true)
+                                        {
+                                            @foreach (var activity in Model.RecentActivities)
+                                            {
+                                                <div class="timeline-item">
+                                                    <div class="timeline-marker bg-@activity.Type"></div>
+                                                    <div class="timeline-content">
+                                                        <h6 class="mb-1">@activity.Title</h6>
+                                                        <p class="mb-1 text-muted">@activity.Description</p>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock me-1"></i>
+                                                            @activity.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-5">
+                                                <i class="fas fa-history text-muted" style="font-size: 3rem;"></i>
+                                                <h6 class="mt-3 text-muted">Chưa có hoạt động nào</h6>
+                                                <p class="text-muted">Các hoạt động của bạn sẽ được hiển thị ở đây</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Avatar Upload Modal -->
+<div class="modal fade" id="avatarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>
+                    Cập nhật ảnh đại diện
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="UploadAvatar" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Chọn ảnh mới</label>
+                        <input type="file" class="form-control" name="AvatarFile" accept="image/*" required>
+                        <small class="text-muted">Định dạng: JPG, PNG. Kích thước tối đa: 2MB</small>
+                    </div>
+                    <div class="text-center">
+                        <img id="avatarPreview" src="#" alt="Preview" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; display: none;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Tải lên
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-large {
+        position: relative;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -2.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #e9ecef;
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 3px solid #667eea;
+    }
+
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6c757d;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .nav-tabs .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        transform: translateY(-1px);
+    }
+</style>
+
+<script>
+    // Avatar preview
+    document.querySelector('input[name="AvatarFile"]').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('avatarPreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Auto-hide alerts
+    setTimeout(function() {
+        document.querySelectorAll('.alert').forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script> 
