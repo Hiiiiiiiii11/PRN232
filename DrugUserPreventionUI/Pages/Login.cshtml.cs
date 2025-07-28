@@ -103,6 +103,8 @@ namespace DrugUserPreventionUI.Pages
 
                             if (userInfo != null)
                             {
+                                // Thêm vào đây
+                                HttpContext.Session.SetString("user_id", userInfo.UserId.ToString());
                                 // Only store the JWT token in cookie
                                 var cookieOptions = new CookieOptions
                                 {

@@ -43,7 +43,7 @@
                     
                     <!-- Actions -->
                     <div class="btn-group">
-                        <a href="?action=add" class="btn btn-primary">
+                        <a href="/AdminDashboard?action=add" class="btn btn-primary">
                             <i class="fas fa-user-plus me-1"></i>
                             Thêm tài khoản
                         </a>
@@ -274,7 +274,7 @@
                                         <th>Vai trò</th>
                                         <th>Trạng thái</th>
                                         <th>Ngày tạo</th>
-                                        <th>Thao tác</th>
+@*                                         <th>Thao tác</th> *@
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -326,11 +326,11 @@
                                                     </a> *@
                                                     
                                                     <!-- Edit -->
-                                                    <a href="?action=edit&id=@user.UserID" 
+@*                                                     <a href="?action=edit&id=@user.UserID" 
                                                        class="btn btn-sm btn-outline-warning" 
                                                        title="Chỉnh sửa">
                                                         <i class="fas fa-edit"></i>
-                                                    </a>
+                                                    </a> *@
                                                     
                                                     <!-- Ban/Unban -->
 @*                                                     @if (user.Status == "Active")
@@ -359,7 +359,7 @@
                                                     } *@
                                                     
                                                     <!-- Delete -->
-                                                    <form method="post" asp-page-handler="DeleteUser" style="display: inline;" class="d-inline">
+@*                                                     <form method="post" asp-page-handler="DeleteUser" style="display: inline;" class="d-inline">
                                                         <input type="hidden" name="id" value="@user.UserID" />
                                                         <button type="submit" 
                                                                 class="btn btn-sm btn-outline-danger" 
@@ -367,7 +367,7 @@
                                                                 onclick="return confirm('⚠️ XÓA TÀI KHOẢN\n\nBạn có chắc muốn xóa tài khoản: @user.FullName?\n\n❗ Hành động này KHÔNG THỂ HOÀN TÁC!')">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
-                                                    </form>
+                                                    </form> *@
                                                 </div>
                                             </td>
                                         </tr>
@@ -586,7 +586,7 @@
                             <i class="fas fa-user-edit me-2"></i><text>Chỉnh sửa tài khoản</text>
                         }
                     </h5>
-                    <a href="/AdminDashboard" class="btn btn-secondary">
+                    <a href="/AdminDashboard/AdminDashboard" class="btn btn-secondary">
                         <i class="fas fa-times me-1"></i>
                         Hủy
                     </a>
@@ -725,7 +725,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="/AdminDashboard" class="btn btn-secondary">
+                            <a href="/AdminDashboard/AdminDashboard" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-1"></i>
                                 Quay lại
                             </a>

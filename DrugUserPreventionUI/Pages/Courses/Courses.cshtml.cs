@@ -108,7 +108,7 @@ namespace DrugUserPreventionUI.Pages.Courses
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return RedirectToPage("/Courses", new { message = "Đăng ký khóa học thành công!", messageType = "success" });
+                    return RedirectToPage("/Courses/Courses", new { hanler = "Register", message = "Đăng ký khóa học thành công!", messageType = "success" });
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
@@ -123,12 +123,12 @@ namespace DrugUserPreventionUI.Pages.Courses
                     });
 
                     var errorMessage = errorResponse?.Message ?? "Không thể đăng ký khóa học";
-                    return RedirectToPage("/Courses", new { message = errorMessage, messageType = "error" });
+                    return RedirectToPage("/Courses/Courses", new { message = errorMessage, messageType = "error" });
                 }
             }
             catch (Exception ex)
             {
-                return RedirectToPage("/Courses", new { message = $"Lỗi: {ex.Message}", messageType = "error" });
+                return RedirectToPage("/Courses/Courses", new { message = $"Lỗi: {ex.Message}", messageType = "error" });
             }
         }
 
@@ -146,17 +146,17 @@ namespace DrugUserPreventionUI.Pages.Courses
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return RedirectToPage("/Courses", new { message = "Hủy đăng ký khóa học thành công!", messageType = "success" });
+                    return RedirectToPage("/Courses/Courses", new { hanler = "Unregister", message = "Hủy đăng ký khóa học thành công!", messageType = "success" });
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return RedirectToPage("/Courses", new { message = $"Lỗi khi hủy đăng ký: {errorContent}", messageType = "error" });
+                    return RedirectToPage("/Courses/Courses", new { message = $"Lỗi khi hủy đăng ký: {errorContent}", messageType = "error" });
                 }
             }
             catch (Exception ex)
             {
-                return RedirectToPage("/Courses", new { message = $"Lỗi: {ex.Message}", messageType = "error" });
+                return RedirectToPage("/Courses/Courses", new { message = $"Lỗi: {ex.Message}", messageType = "error" });
             }
         }
 
