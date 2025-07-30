@@ -9,8 +9,6 @@ using Repositories.IRepository.Users;
 
 namespace DrugUsePrevention.Controllers
 {
-    // Temporarily disabled to fix Swagger
-    /*
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -79,19 +77,29 @@ namespace DrugUsePrevention.Controllers
         {
             try
             {
+                // Debug info
+                System.Diagnostics.Debug.WriteLine($"=== Update Profile API Called ===");
+                System.Diagnostics.Debug.WriteLine($"User ID: {id}");
+                System.Diagnostics.Debug.WriteLine($"Request: {System.Text.Json.JsonSerializer.Serialize(request)}");
+                
                 var currentUserId = GetCurrentUserId();
+                System.Diagnostics.Debug.WriteLine($"Current User ID from token: {currentUserId}");
                 
                 // Users can only update their own profile unless they're admin
                 if (currentUserId != id && !User.IsInRole("Admin"))
                 {
+                    System.Diagnostics.Debug.WriteLine("Access forbidden - user can only update own profile");
                     return Forbid();
                 }
 
                 var user = await _userRepository.GetByIdAsync(id);
                 if (user == null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"User not found with ID: {id}");
                     return NotFound(ApiResponse<string>.ErrorResult("Không tìm thấy người dùng"));
                 }
+
+                System.Diagnostics.Debug.WriteLine($"Found user: {user.Username} - {user.FullName}");
 
                 // Update user properties
                 user.FullName = request.FullName;
@@ -100,12 +108,16 @@ namespace DrugUsePrevention.Controllers
                 user.DateOfBirth = request.DateOfBirth;
                 user.Gender = request.Gender;
 
+                System.Diagnostics.Debug.WriteLine("Updating user in database...");
                 await _userRepository.UpdateAsync(user);
+                System.Diagnostics.Debug.WriteLine("User updated successfully");
 
                 return Ok(ApiResponse<string>.SuccessResult("", "Cập nhật thông tin thành công"));
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Update Profile Exception: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return BadRequest(ApiResponse<string>.ErrorResult(ex.Message));
             }
         }
@@ -256,5 +268,4 @@ namespace DrugUsePrevention.Controllers
         public int TotalAppointments { get; set; }
         public DateTime MemberSince { get; set; }
     }
-    */
 } 

@@ -19,6 +19,10 @@ namespace DrugUserPreventionUI.Pages
         {
             _httpClientFactory = httpClientFactory;
             _environment = environment;
+            
+            // Initialize forms to prevent null reference
+            ProfileForm = new ProfileFormModel();
+            PasswordForm = new ChangePasswordFormModel();
         }
 
         [BindProperty]
@@ -47,26 +51,59 @@ namespace DrugUserPreventionUI.Pages
                 await LoadUserDataAsync();
                 await LoadUserStatsAsync();
                 await LoadRecentActivitiesAsync();
+                
+                // Ensure form is populated even if user data loading failed
+                if (ProfileForm.FullName == null && CurrentUser != null)
+                {
+                    PopulateProfileForm();
+                }
+                
                 return Page();
             }
             catch (Exception ex)
             {
                 ErrorMessage = "Có lỗi xảy ra khi tải thông tin người dùng: " + ex.Message;
+                
+                // Try to populate form with session data as fallback
+                TryPopulateFromSession();
+                
                 return Page();
             }
         }
 
         public async Task<IActionResult> OnPostUpdateProfileAsync()
         {
+            // Debug info
+            System.Diagnostics.Debug.WriteLine("=== Profile Update Started ===");
+            
             // Check if user is logged in
             var token = HttpContext.Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(token))
             {
+                ErrorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
                 return RedirectToPage("/Login", new { returnUrl = "/Profile" });
             }
 
-            if (!ModelState.IsValid)
+            // Only validate ProfileForm fields, ignore PasswordForm
+            var profileErrors = new List<string>();
+            var profileFieldPrefix = "ProfileForm.";
+            
+            foreach (var key in ModelState.Keys.Where(k => k.StartsWith(profileFieldPrefix)))
             {
+                var state = ModelState[key];
+                if (state != null && state.Errors.Count > 0)
+                {
+                    foreach (var error in state.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Profile Field Error - {key}: {error.ErrorMessage}");
+                        profileErrors.Add($"{key.Replace(profileFieldPrefix, "")}: {error.ErrorMessage}");
+                    }
+                }
+            }
+            
+            if (profileErrors.Any())
+            {
+                ErrorMessage = $"Thông tin cá nhân không hợp lệ: {string.Join("; ", profileErrors)}";
                 await LoadUserDataAsync();
                 return Page();
             }
@@ -74,41 +111,73 @@ namespace DrugUserPreventionUI.Pages
             try
             {
                 var client = _httpClientFactory.CreateClient();
-
                 client.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var updateRequest = new
+                // Use proper DTO instead of anonymous object
+                var updateRequest = new UpdateProfileRequest
                 {
-                    FullName = ProfileForm.FullName,
-                    Email = ProfileForm.Email,
+                    FullName = ProfileForm.FullName ?? "",
+                    Email = ProfileForm.Email ?? "",
                     Phone = ProfileForm.Phone,
                     DateOfBirth = ProfileForm.DateOfBirth,
                     Gender = ProfileForm.Gender
                 };
 
                 var userId = GetCurrentUserId();
-                var response = await client.PutAsJsonAsync($"https://localhost:7045/api/User/{userId}", updateRequest);
+                var apiUrl = $"https://localhost:7045/api/User/{userId}";
+                
+                // Debug info
+                System.Diagnostics.Debug.WriteLine($"Update API URL: {apiUrl}");
+                System.Diagnostics.Debug.WriteLine($"Update Data: {JsonSerializer.Serialize(updateRequest)}");
+
+                var response = await client.PutAsJsonAsync(apiUrl, updateRequest);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    System.Diagnostics.Debug.WriteLine($"Update Success: {responseContent}");
+                    
                     SuccessMessage = "Cập nhật thông tin cá nhân thành công!";
-                    await LoadUserDataAsync(); // Reload user data
+                    
+                    // Clear error message if any
+                    ErrorMessage = null;
+                    
+                    // Reload user data
+                    await LoadUserDataAsync();
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    ErrorMessage = "Có lỗi xảy ra khi cập nhật thông tin: " + errorContent;
+                    System.Diagnostics.Debug.WriteLine($"Update Failed: {response.StatusCode} - {errorContent}");
+                    
+                    ErrorMessage = $"Lỗi cập nhật ({response.StatusCode}): {errorContent}";
                 }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Unauthorized: {ex.Message}");
+                ErrorMessage = "Không thể xác định người dùng. Vui lòng đăng nhập lại.";
+                return RedirectToPage("/Login", new { returnUrl = "/Profile" });
             }
             catch (Exception ex)
             {
-                ErrorMessage = "Có lỗi xảy ra: " + ex.Message;
+                System.Diagnostics.Debug.WriteLine($"Update Exception: {ex.Message}");
+                ErrorMessage = $"Có lỗi xảy ra: {ex.Message}";
             }
 
-            await LoadUserDataAsync();
-            await LoadUserStatsAsync();
-            await LoadRecentActivitiesAsync();
+            // Always reload data and return to page
+            try
+            {
+                await LoadUserDataAsync();
+                await LoadUserStatsAsync();
+                await LoadRecentActivitiesAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error reloading data: {ex.Message}");
+            }
+            
             return Page();
         }
 
@@ -118,18 +187,37 @@ namespace DrugUserPreventionUI.Pages
             var token = HttpContext.Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(token))
             {
+                ErrorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
                 return RedirectToPage("/Login", new { returnUrl = "/Profile" });
             }
 
-            if (!ModelState.IsValid)
+            // Only validate PasswordForm fields, ignore ProfileForm
+            var passwordErrors = new List<string>();
+            var passwordFieldPrefix = "PasswordForm.";
+            
+            foreach (var key in ModelState.Keys.Where(k => k.StartsWith(passwordFieldPrefix)))
             {
+                var state = ModelState[key];
+                if (state != null && state.Errors.Count > 0)
+                {
+                    foreach (var error in state.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Password Field Error - {key}: {error.ErrorMessage}");
+                        passwordErrors.Add($"{key.Replace(passwordFieldPrefix, "")}: {error.ErrorMessage}");
+                    }
+                }
+            }
+            
+            if (passwordErrors.Any())
+            {
+                ErrorMessage = $"Thông tin mật khẩu không hợp lệ: {string.Join("; ", passwordErrors)}";
                 await LoadUserDataAsync();
                 return Page();
             }
 
             if (PasswordForm.NewPassword != PasswordForm.ConfirmPassword)
             {
-                ModelState.AddModelError("PasswordForm.ConfirmPassword", "Mật khẩu xác nhận không khớp");
+                ErrorMessage = "Mật khẩu xác nhận không khớp";
                 await LoadUserDataAsync();
                 return Page();
             }
@@ -267,6 +355,7 @@ namespace DrugUserPreventionUI.Pages
                 
                 if (string.IsNullOrEmpty(token))
                 {
+                    ErrorMessage = "Không tìm thấy token xác thực. Vui lòng đăng nhập lại.";
                     return;
                 }
 
@@ -274,36 +363,219 @@ namespace DrugUserPreventionUI.Pages
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 var userId = GetCurrentUserId();
-                var response = await client.GetAsync($"https://localhost:7045/api/User/{userId}");
+                var apiUrl = $"https://localhost:7045/api/User/{userId}";
+                
+                // Debug info
+                System.Diagnostics.Debug.WriteLine($"Profile API Call: {apiUrl}");
+                System.Diagnostics.Debug.WriteLine($"User ID: {userId}");
+                
+                var response = await client.GetAsync(apiUrl);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<SimpleApiResponse<UserDTO>>(content, new JsonSerializerOptions
+                    
+                    // Try different response types
+                    try
                     {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    if (apiResponse?.Success == true && apiResponse.Data != null)
-                    {
-                        CurrentUser = apiResponse.Data;
-                        
-                        // Populate form with current user data
-                        ProfileForm = new ProfileFormModel
+                        var apiResponse = JsonSerializer.Deserialize<SimpleApiResponse<UserDTO>>(content, new JsonSerializerOptions
                         {
-                            FullName = CurrentUser.FullName ?? "",
-                            Email = CurrentUser.Email ?? "",
-                            Phone = CurrentUser.Phone,
-                            DateOfBirth = CurrentUser.DateOfBirth,
-                            Gender = CurrentUser.Gender
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                        if (apiResponse?.Success == true && apiResponse.Data != null)
+                        {
+                            CurrentUser = apiResponse.Data;
+                            PopulateProfileForm();
+                        }
+                        else
+                        {
+                            // Try alternate response format
+                            var altResponse = JsonSerializer.Deserialize<ApiResponse<UserDTO>>(content, new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
+
+                            if (altResponse?.Success == true && altResponse.Data != null)
+                            {
+                                CurrentUser = altResponse.Data;
+                                PopulateProfileForm();
+                            }
+                            else
+                            {
+                                ErrorMessage = "Không thể tải thông tin người dùng từ server.";
+                            }
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // Try direct deserialization
+                        var userData = JsonSerializer.Deserialize<UserDTO>(content, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                        if (userData != null)
+                        {
+                            CurrentUser = userData;
+                            PopulateProfileForm();
+                        }
+                        else
+                        {
+                            ErrorMessage = "Lỗi khi xử lý dữ liệu người dùng.";
+                        }
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    ErrorMessage = $"Không thể tải thông tin người dùng. Mã lỗi: {response.StatusCode}. Chi tiết: {errorContent}";
+                    
+                    // Debug info
+                    System.Diagnostics.Debug.WriteLine($"API Error: {response.StatusCode}");
+                    System.Diagnostics.Debug.WriteLine($"Error Content: {errorContent}");
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Có lỗi xảy ra: {ex.Message}";
+            }
+        }
+
+        private void PopulateProfileForm()
+        {
+            if (CurrentUser != null)
+            {
+                ProfileForm = new ProfileFormModel
+                {
+                    FullName = CurrentUser.FullName ?? "",
+                    Email = CurrentUser.Email ?? "",
+                    Phone = CurrentUser.Phone,
+                    DateOfBirth = CurrentUser.DateOfBirth,
+                    Gender = CurrentUser.Gender
+                };
+            }
+        }
+
+        private void TryPopulateFromSession()
+        {
+            try
+            {
+                // First try to repopulate session from JWT token if session is empty
+                TryRepopulateSessionFromToken();
+                
+                // Try to get basic info from session
+                var fullName = HttpContext.Session.GetString("user_name");
+                var email = HttpContext.Session.GetString("user_email");
+                var role = HttpContext.Session.GetString("user_role");
+
+                if (!string.IsNullOrEmpty(fullName) || !string.IsNullOrEmpty(email))
+                {
+                    ProfileForm = new ProfileFormModel
+                    {
+                        FullName = fullName ?? "",
+                        Email = email ?? "",
+                        Phone = ProfileForm.Phone, // Keep existing values
+                        DateOfBirth = ProfileForm.DateOfBirth,
+                        Gender = ProfileForm.Gender
+                    };
+
+                    // Create basic CurrentUser from session if not already set
+                    if (CurrentUser == null)
+                    {
+                        CurrentUser = new UserDTO
+                        {
+                            FullName = fullName,
+                            Email = email,
+                            Role = role,
+                            Username = email // Use email as username fallback
                         };
                     }
                 }
             }
             catch (Exception)
             {
-                // Handle error silently or log
+                // Ignore errors in fallback method
             }
+        }
+
+        private void TryRepopulateSessionFromToken()
+        {
+            try
+            {
+                var token = HttpContext.Request.Cookies["auth_token"];
+                if (string.IsNullOrEmpty(token)) return;
+
+                // Check if session already has user_id
+                var existingUserId = HttpContext.Session.GetString("user_id");
+                if (!string.IsNullOrEmpty(existingUserId)) return;
+
+                // Decode JWT token to get user info
+                var userInfo = DecodeJwtToken(token);
+                if (userInfo != null)
+                {
+                    HttpContext.Session.SetString("user_id", userInfo.UserId.ToString());
+                    HttpContext.Session.SetString("user_name", userInfo.UserName);
+                    HttpContext.Session.SetString("user_email", userInfo.Email);
+                    HttpContext.Session.SetString("user_role", userInfo.Role);
+                    
+                    System.Diagnostics.Debug.WriteLine("Session repopulated from JWT token");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error repopulating session: {ex.Message}");
+            }
+        }
+
+        // JWT token decoder (simplified version)
+        private JwtUserInfo? DecodeJwtToken(string token)
+        {
+            try
+            {
+                var parts = token.Split('.');
+                if (parts.Length != 3) return null;
+
+                var payload = parts[1];
+                // Add padding if needed
+                switch (payload.Length % 4)
+                {
+                    case 2: payload += "=="; break;
+                    case 3: payload += "="; break;
+                }
+
+                var jsonBytes = Convert.FromBase64String(payload);
+                var json = System.Text.Encoding.UTF8.GetString(jsonBytes);
+                
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                return new JwtUserInfo
+                {
+                    UserId = root.TryGetProperty("nameid", out var userIdProp) ? 
+                        (int.TryParse(userIdProp.GetString(), out var uid) ? uid : 0) : 0,
+                    UserName = root.TryGetProperty("unique_name", out var nameProp) ? nameProp.GetString() ?? "" : "",
+                    Email = root.TryGetProperty("email", out var emailProp) ? emailProp.GetString() ?? "" : "",
+                    Role = root.TryGetProperty("role", out var roleProp) ? roleProp.GetString() ?? "" : ""
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // Helper class for JWT token data
+        private class JwtUserInfo
+        {
+            public int UserId { get; set; }
+            public string UserName { get; set; } = "";
+            public string Email { get; set; } = "";
+            public string Role { get; set; } = "";
         }
 
         private async Task LoadUserStatsAsync()
@@ -389,12 +661,53 @@ namespace DrugUserPreventionUI.Pages
 
         private int GetCurrentUserId()
         {
+            // Debug info
+            System.Diagnostics.Debug.WriteLine("=== Getting Current User ID ===");
+            
+            // Try to repopulate session from token if needed
+            TryRepopulateSessionFromToken();
+            
+            // Try to get user ID from session first
+            var userIdFromSession = HttpContext.Session.GetString("user_id");
+            System.Diagnostics.Debug.WriteLine($"Session user_id: {userIdFromSession}");
+            
+            if (!string.IsNullOrEmpty(userIdFromSession) && int.TryParse(userIdFromSession, out int sessionUserId))
+            {
+                System.Diagnostics.Debug.WriteLine($"Using session user ID: {sessionUserId}");
+                return sessionUserId;
+            }
+
+            // Fallback to JWT claims
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            System.Diagnostics.Debug.WriteLine($"JWT NameIdentifier claim: {userIdClaim?.Value}");
+            
             if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
             {
+                System.Diagnostics.Debug.WriteLine($"Using JWT user ID: {userId}");
                 return userId;
             }
-            throw new UnauthorizedAccessException("Không thể xác định người dùng hiện tại");
+
+            // Try alternative session keys
+            var altSessionKeys = new[] { "UserId", "user_Id", "UserID" };
+            foreach (var key in altSessionKeys)
+            {
+                var altUserId = HttpContext.Session.GetString(key);
+                System.Diagnostics.Debug.WriteLine($"Session {key}: {altUserId}");
+                if (!string.IsNullOrEmpty(altUserId) && int.TryParse(altUserId, out int altId))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Using alternative session user ID from {key}: {altId}");
+                    return altId;
+                }
+            }
+            
+            // List all session keys for debugging
+            System.Diagnostics.Debug.WriteLine("=== All Session Keys ===");
+            foreach (var key in HttpContext.Session.Keys)
+            {
+                System.Diagnostics.Debug.WriteLine($"Session Key: {key} = {HttpContext.Session.GetString(key)}");
+            }
+            
+            throw new UnauthorizedAccessException($"Không thể xác định người dùng hiện tại. Session user_id: {userIdFromSession}, JWT claim: {userIdClaim?.Value}");
         }
 
         public string GetRoleBadgeClass()
@@ -446,7 +759,7 @@ namespace DrugUserPreventionUI.Pages
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
 
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
+        [RegularExpression(@"^[0-9+\-\s\(\)]{10,15}$", ErrorMessage = "Số điện thoại không hợp lệ (10-15 chữ số)")]
         [Display(Name = "Số điện thoại")]
         public string? Phone { get; set; }
 

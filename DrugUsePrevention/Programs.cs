@@ -81,6 +81,10 @@ namespace DrugUsePrevention
             builder.Services.AddScoped<IProgramParticipationRepository, ProgramParticipationRepository>();
             builder.Services.AddScoped<IProgramService, ProgramService>();
             builder.Services.AddScoped<IProgramParticipationService, ProgramParticipationService>();
+            builder.Services.AddScoped<IConsultantScheduleRepository, ConsultantScheduleRepository>();
+            builder.Services.AddScoped<IConsultantAvailabilityRepository, ConsultantAvailabilityRepository>();
+            builder.Services.AddScoped<IAppointmentSlotRepository, AppointmentSlotRepository>();
+            builder.Services.AddScoped<IConsultantCalendarService, ConsultantCalendarService>();
 
             // Add Controllers
             builder.Services.AddControllers();

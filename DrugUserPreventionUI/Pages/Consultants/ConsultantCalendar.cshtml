@@ -1,0 +1,355 @@
+@page "/consultants/{consultantId:int}/calendar"
+@model DrugUserPreventionUI.Pages.Consultants.ConsultantCalendarModel
+@{
+    ViewData["Title"] = "Lịch Tư Vấn - " + Model.ConsultantName;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-calendar-alt text-primary"></i>
+                                Lịch Tư Vấn - @Model.ConsultantName
+                            </h2>
+                            <p class="text-muted mb-0">Chọn thời gian phù hợp để đặt lịch tư vấn</p>
+                        </div>
+                        <div>
+                            <a href="/consultants" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button class="btn btn-outline-primary" onclick="navigateWeek(-1)">
+                                <i class="fas fa-chevron-left"></i> Tuần trước
+                            </button>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" id="current-week-display">
+                                @Model.CurrentWeekDisplay
+                            </h5>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-primary" onclick="navigateWeek(1)">
+                                Tuần sau <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Calendar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="calendar-container">
+                        <div class="row">
+                            @for (int day = 0; day < 7; day++)
+                            {
+                                var currentDate = Model.WeekStartDate.AddDays(day);
+                                var daySlots = Model.WeeklyCalendar?.DailyCalendars?.FirstOrDefault(d => d.Date.Date == currentDate.Date);
+                                var isToday = currentDate.Date == DateTime.Today;
+                                var isPast = currentDate.Date < DateTime.Today;
+                                
+                                <div class="col-lg-1-7 col-md-6 col-sm-12 mb-3">
+                                    <div class="day-column @(isToday ? "today" : "") @(isPast ? "past-day" : "")">
+                                        <div class="day-header text-center py-2 @(isToday ? "bg-primary text-white" : "bg-light")">
+                                            <div class="day-name">@Model.GetDayName(day)</div>
+                                            <div class="day-date">@currentDate.ToString("dd/MM")</div>
+                                        </div>
+                                        
+                                        <div class="day-slots" style="max-height: 400px; overflow-y: auto;">
+                                            @if (daySlots?.AvailableSlots?.Any() == true)
+                                            {
+                                                @foreach (var slot in daySlots.AvailableSlots.OrderBy(s => s.SlotDateTime))
+                                                {
+                                                    <div class="slot-item available-slot" 
+                                                         data-consultant-id="@Model.ConsultantId" 
+                                                         data-slot-datetime="@slot.SlotDateTime.ToString("yyyy-MM-ddTHH:mm:ss")"
+                                                         onclick="selectSlot(this)">
+                                                        <i class="fas fa-clock"></i>
+                                                        @slot.FormattedTime
+                                                    </div>
+                                                }
+                                            }
+                                            else if (daySlots?.BookedSlots?.Any() == true)
+                                            {
+                                                @foreach (var slot in daySlots.BookedSlots.OrderBy(s => s.SlotDateTime))
+                                                {
+                                                    <div class="slot-item booked-slot">
+                                                        <i class="fas fa-times"></i>
+                                                        @slot.FormattedTime
+                                                        <small class="d-block">Đã đặt</small>
+                                                    </div>
+                                                }
+                                            }
+                                            else if (!isPast)
+                                            {
+                                                <div class="text-center text-muted py-3">
+                                                    <i class="fas fa-calendar-times"></i>
+                                                    <div>Không có lịch</div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="text-center text-muted py-3">
+                                                    <i class="fas fa-history"></i>
+                                                    <div>Đã qua</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    @if (Model.IsAuthenticated)
+    {
+        <div class="row" id="booking-form-container" style="display: none;">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-plus"></i>
+                            Đặt Lịch Tư Vấn
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="appointment-form" method="post" asp-page-handler="BookAppointment">
+                            <input type="hidden" id="selected-consultant-id" name="ConsultantId" value="@Model.ConsultantId" />
+                            <input type="hidden" id="selected-slot-datetime" name="SlotDateTime" />
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="selected-slot-info bg-light p-3 rounded mb-3">
+                                        <h6><i class="fas fa-info-circle text-primary"></i> Thông tin đã chọn:</h6>
+                                        <div><strong>Consultant:</strong> @Model.ConsultantName</div>
+                                        <div><strong>Thời gian:</strong> <span id="selected-slot-display">-</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="appointment-notes" class="form-label">
+                                            <i class="fas fa-sticky-note"></i> Ghi chú (tùy chọn)
+                                        </label>
+                                        <textarea class="form-control" id="appointment-notes" name="Notes" rows="4" 
+                                                  placeholder="Mô tả vấn đề bạn muốn tư vấn..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-secondary" onclick="cancelBooking()">
+                                    <i class="fas fa-times"></i> Hủy
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check"></i> Xác nhận đặt lịch
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row" id="login-prompt" style="display: none;">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm border-warning">
+                    <div class="card-body text-center">
+                        <i class="fas fa-sign-in-alt fa-3x text-warning mb-3"></i>
+                        <h5>Vui lòng đăng nhập để đặt lịch</h5>
+                        <p class="text-muted">Bạn cần đăng nhập để có thể đặt lịch tư vấn với chuyên gia</p>
+                        <a href="/login" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Success/Error Messages -->
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div class="toast show" role="alert">
+            <div class="toast-header @(Model.MessageType == "success" ? "bg-success text-white" : "bg-danger text-white")">
+                <i class="fas @(Model.MessageType == "success" ? "fa-check-circle" : "fa-exclamation-triangle")"></i>
+                <strong class="ms-2">@(Model.MessageType == "success" ? "Thành công" : "Lỗi")</strong>
+            </div>
+            <div class="toast-body">
+                @Model.Message
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+.col-lg-1-7 {
+    flex: 0 0 auto;
+    width: 14.2857%;
+}
+
+.day-column {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 500px;
+}
+
+.day-column.today {
+    border-color: #007bff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+}
+
+.day-column.past-day {
+    opacity: 0.6;
+}
+
+.day-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.day-slots {
+    padding: 8px;
+}
+
+.slot-item {
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.available-slot {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.available-slot:hover {
+    background-color: #c3e6cb;
+    transform: translateY(-1px);
+}
+
+.available-slot.selected {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.booked-slot {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    cursor: not-allowed;
+}
+
+.calendar-container {
+    overflow-x: auto;
+}
+
+</style>
+
+<script>
+let currentWeekStart = new Date('@Model.WeekStartDate.ToString("yyyy-MM-dd")');
+let selectedSlot = null;
+
+function navigateWeek(direction) {
+    currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+    const weekParam = currentWeekStart.toISOString().split('T')[0];
+    window.location.href = `/consultants/@Model.ConsultantId/calendar?weekStart=${weekParam}`;
+}
+
+function selectSlot(slotElement) {
+    // Remove previous selection
+    document.querySelectorAll('.available-slot.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Select new slot
+    slotElement.classList.add('selected');
+    selectedSlot = slotElement;
+    
+    // Update form
+    const consultantId = slotElement.getAttribute('data-consultant-id');
+    const slotDateTime = slotElement.getAttribute('data-slot-datetime');
+    
+    document.getElementById('selected-consultant-id').value = consultantId;
+    document.getElementById('selected-slot-datetime').value = slotDateTime;
+    
+    // Format display
+    const dateTime = new Date(slotDateTime);
+    const displayText = dateTime.toLocaleDateString('vi-VN') + ' - ' + dateTime.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+    document.getElementById('selected-slot-display').textContent = displayText;
+    
+    // Show booking form
+    @if (Model.IsAuthenticated)
+    {
+        <text>
+        document.getElementById('booking-form-container').style.display = 'block';
+        document.getElementById('booking-form-container').scrollIntoView({ behavior: 'smooth' });
+        </text>
+    }
+    else
+    {
+        <text>
+        document.getElementById('login-prompt').style.display = 'block';
+        document.getElementById('login-prompt').scrollIntoView({ behavior: 'smooth' });
+        </text>
+    }
+}
+
+function cancelBooking() {
+    document.getElementById('booking-form-container').style.display = 'none';
+    document.getElementById('login-prompt').style.display = 'none';
+    
+    if (selectedSlot) {
+        selectedSlot.classList.remove('selected');
+        selectedSlot = null;
+    }
+    
+    document.getElementById('selected-slot-display').textContent = '-';
+    document.getElementById('appointment-notes').value = '';
+}
+
+// Auto-hide toast messages
+document.addEventListener('DOMContentLoaded', function() {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 5000);
+    });
+});
+</script>
