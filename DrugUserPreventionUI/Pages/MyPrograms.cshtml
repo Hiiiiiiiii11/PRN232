@@ -6,7 +6,6 @@
 }
 
 <div class="container-fluid px-4">
-    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-0 text-gray-800">
@@ -17,7 +16,6 @@
         </div>
     </div>
 
-    <!-- Alert Messages -->
     @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -36,7 +34,7 @@
         </div>
     }
 
-    <!-- Filter Section -->
+    <!-- Filter -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="get">
@@ -69,7 +67,7 @@
         </div>
     </div>
 
-    <!-- Programs Grid -->
+    <!-- Programs -->
     @if (Model.UserPrograms != null && Model.UserPrograms.Any())
     {
         <div class="row">
@@ -77,7 +75,6 @@
             {
                 <div class="col-lg-6 col-xl-4 mb-4">
                     <div class="card h-100 shadow-sm border-0">
-                        <!-- Program Image -->
                         @if (!string.IsNullOrEmpty(program.ImageUrl))
                         {
                             <img src="@program.ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;" alt="@program.ProgramName">
@@ -104,33 +101,19 @@
                                 </div>
                             </div>
 
-                            <!-- Progress Bar for Active Programs -->
-@*                             @if (program.ParticipationStatus == "Active" && program.Progress.HasValue)
-                            {
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="text-small">Tiến độ hoàn thành</span>
-                                        <span class="text-small">@program.Progress.Value%</span>
-                                    </div>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar" role="progressbar" style="width: @program.Progress.Value%" aria-valuenow="@program.Progress.Value" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </div>
-                            } *@
-
-                            <div class="card-actions mt-auto">
-
+                            <div class="card-actions mt-auto d-flex justify-content-between">
                                 <a href="/Programs/@program.ProgramID" class="btn btn-primary btn-sm">
                                     <i class="fas fa-eye me-1"></i>
                                     Xem chi tiết
                                 </a>
-@*                                 @if (program.ParticipationStatus == "Active")
-                                {
+
+                                
+                                
                                     <button type="button" class="btn btn-outline-danger btn-sm" onclick="cancelParticipation(@program.ProgramID)">
                                         <i class="fas fa-times me-1"></i>
                                         Hủy tham gia
                                     </button>
-                                } *@
+                                
                             </div>
                         </div>
                     </div>
@@ -163,15 +146,14 @@
     }
     else
     {
-        <!-- No Programs Message -->
         <div class="card">
             <div class="card-body text-center py-5">
                 <i class="fas fa-project-diagram fa-4x text-muted mb-4"></i>
                 <h4 class="text-muted">Tính năng đang được phát triển</h4>
-                <p class="text-muted mb-4">Tính năng quản lý chương trình đang được phát triển. Bạn có thể tham gia các khóa học tại mục "Khóa học đã đăng ký".</p>
-                <a href="/MyCourses" class="btn btn-primary">
-                    <i class="fas fa-graduation-cap me-2"></i>
-                    Xem khóa học của tôi
+                <p class="text-muted mb-4">Bạn chưa đăng ký chương trình nào. Hãy khám phá và tham gia các chương trình phù hợp!</p>
+                <a href="/Programs" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>
+                    Khám phá chương trình
                 </a>
             </div>
         </div>
@@ -217,4 +199,4 @@
         }
         return cookieValue;
     }
-</script> 
+</script>

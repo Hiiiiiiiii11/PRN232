@@ -100,6 +100,40 @@ namespace DrugUserPreventionUI.Pages.MyPrograms
                 ErrorMessage = $"Lỗi gọi API: {ex.Message}";
             }
         }
+        public async Task<IActionResult> OnPostCancelParticipationAsync(int participationId)
+        {
+            var token = HttpContext.Request.Cookies["auth_token"];
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToPage("/Login", new { returnUrl = "/MyPrograms" });
+            }
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                var request = new HttpRequestMessage(HttpMethod.Delete, $"{API_BASE_URL}/api/ProgramParticipation/{participationId}");
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await client.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    SuccessMessage = "Đã hủy tham gia chương trình thành công.";
+                }
+                else
+                {
+                    var err = await response.Content.ReadAsStringAsync();
+                    ErrorMessage = $"Lỗi khi hủy tham gia: {err}";
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Lỗi hệ thống: {ex.Message}";
+            }
+
+            // Load lại danh sách
+            await LoadUserProgramsAsync();
+            return Page();
+        }
 
 
         public int GetCurrentUserId()

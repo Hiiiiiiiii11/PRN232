@@ -48,10 +48,10 @@
                             Thêm tài khoản
                         </a>
 
-                        <a href="?action=profile" class="btn btn-outline-secondary">
+@*                         <a href="?action=profile" class="btn btn-outline-secondary">
                             <i class="fas fa-user-edit me-1"></i>
                             Profile
-                        </a>
+                        </a> *@
                         
                         <a href="/CourseDashboard" class="btn btn-outline-info">
                             <i class="fas fa-graduation-cap me-1"></i>
@@ -321,60 +321,6 @@
                                                 </span>
                                             </td>
                                             <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <!-- View Detail -->
-@*                                                     <a href="?action=detail&id=@user.UserID" 
-                                                       class="btn btn-sm btn-outline-info" 
-                                                       title="Xem chi tiết">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a> *@
-                                                    
-                                                    <!-- Edit -->
-@*                                                     <a href="?action=edit&id=@user.UserID" 
-                                                       class="btn btn-sm btn-outline-warning" 
-                                                       title="Chỉnh sửa">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a> *@
-                                                    
-                                                    <!-- Ban/Unban -->
-@*                                                     @if (user.Status == "Active")
-                                                    {
-                                                        <form method="post" asp-page-handler="BanUser" style="display: inline;" class="d-inline">
-                                                            <input type="hidden" name="id" value="@user.UserID" />
-                                                            <button type="submit" 
-                                                                    class="btn btn-sm btn-outline-danger" 
-                                                                    title="Cấm tài khoản"
-                                                                    onclick="return confirm('Bạn có chắc muốn cấm tài khoản: @user.FullName?')">
-                                                                <i class="fas fa-ban"></i>
-                                                            </button>
-                                                        </form>
-                                                    }
-                                                    else
-                                                    {
-                                                        <form method="post" asp-page-handler="UnbanUser" style="display: inline;" class="d-inline">
-                                                            <input type="hidden" name="id" value="@user.UserID" />
-                                                            <button type="submit" 
-                                                                    class="btn btn-sm btn-outline-success" 
-                                                                    title="Bỏ cấm tài khoản"
-                                                                    onclick="return confirm('Bạn có chắc muốn bỏ cấm tài khoản: @user.FullName?')">
-                                                                <i class="fas fa-check"></i>
-                                                            </button>
-                                                        </form>
-                                                    } *@
-                                                    
-                                                    <!-- Delete -->
-@*                                                     <form method="post" asp-page-handler="DeleteUser" style="display: inline;" class="d-inline">
-                                                        <input type="hidden" name="id" value="@user.UserID" />
-                                                        <button type="submit" 
-                                                                class="btn btn-sm btn-outline-danger" 
-                                                                title="Xóa tài khoản"
-                                                                onclick="return confirm('⚠️ XÓA TÀI KHOẢN\n\nBạn có chắc muốn xóa tài khoản: @user.FullName?\n\n❗ Hành động này KHÔNG THỂ HOÀN TÁC!')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form> *@
-                                                </div>
-                                            </td>
                                         </tr>
                                     }
                                 </tbody>
@@ -429,152 +375,7 @@
             </div>
         }
 
-        <!-- User Detail View -->
-        @if (Model.CurrentAction == "detail" && Model.UserDetail != null)
-        {
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Chi tiết Tài khoản</h5>
-                    <a href="/AdminDashboard" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>
-                        Quay lại
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 text-center">
-                            @if (!string.IsNullOrEmpty(Model.UserDetail.AvatarUrl))
-                            {
-                                <img src="@Model.UserDetail.AvatarUrl" class="img-fluid rounded-circle mb-3" alt="Avatar" style="max-width: 200px;" />
-                            }
-                            else
-                            {
-                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 200px; height: 200px;">
-                                    <i class="fas fa-user fa-5x text-muted"></i>
-                                </div>
-                            }
-                            <h4>@Model.UserDetail.FullName</h4>
-                            <p class="text-muted">@Model.UserDetail.Role</p>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="row mb-3">
-                                <div class="col-sm-4"><strong>ID:</strong></div>
-                                <div class="col-sm-8">@Model.UserDetail.UserID</div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-4"><strong>Username:</strong></div>
-                                <div class="col-sm-8">@Model.UserDetail.Username</div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-4"><strong>Email:</strong></div>
-                                <div class="col-sm-8">
-                                    @Model.UserDetail.Email
-                                    @if (Model.UserDetail.IsEmailVerified)
-                                    {
-                                        <i class="fas fa-check-circle text-success ms-1" title="Đã xác thực"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="fas fa-times-circle text-danger ms-1" title="Chưa xác thực"></i>
-                                    }
-                                </div>
-                            </div>
-                            
-                            @if (!string.IsNullOrEmpty(Model.UserDetail.Phone))
-                            {
-                                <div class="row mb-3">
-                                    <div class="col-sm-4"><strong>Điện thoại:</strong></div>
-                                    <div class="col-sm-8">@Model.UserDetail.Phone</div>
-                                </div>
-                            }
-                            
-                            @if (Model.UserDetail.DateOfBirth.HasValue)
-                            {
-                                <div class="row mb-3">
-                                    <div class="col-sm-4"><strong>Ngày sinh:</strong></div>
-                                    <div class="col-sm-8">@Model.UserDetail.DateOfBirth.Value.ToString("dd/MM/yyyy")</div>
-                                </div>
-                            }
-                            
-                            @if (!string.IsNullOrEmpty(Model.UserDetail.Gender))
-                            {
-                                <div class="row mb-3">
-                                    <div class="col-sm-4"><strong>Giới tính:</strong></div>
-                                    <div class="col-sm-8">@Model.UserDetail.Gender</div>
-                                </div>
-                            }
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-4"><strong>Vai trò:</strong></div>
-                                <div class="col-sm-8">
-                                    <span class="badge @(Model.UserDetail.Role == "Staff" ? "bg-success" : Model.UserDetail.Role == "Consultant" ? "bg-info" : "bg-secondary")">
-                                        @Model.UserDetail.Role
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-4"><strong>Trạng thái:</strong></div>
-                                <div class="col-sm-8">
-                                    <span class="badge @(Model.UserDetail.Status == "Active" ? "bg-success" : "bg-danger")">
-                                        @Model.UserDetail.Status
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
-                                <div class="col-sm-8">@Model.UserDetail.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
-                            </div>
-                            
-                            <!-- Action buttons -->
-                            <div class="mt-4">
-                                <a href="?action=edit&id=@Model.UserDetail.UserID" class="btn btn-warning me-2">
-                                    <i class="fas fa-edit me-1"></i>
-                                    Chỉnh sửa
-                                </a>
-                                
-                                @if (Model.UserDetail.Status == "Active")
-                                {
-                                    <form method="post" asp-page-handler="BanUser" style="display: inline;" class="me-2">
-                                        <input type="hidden" name="id" value="@Model.UserDetail.UserID" />
-                                        <button type="submit" class="btn btn-danger" 
-                                                onclick="return confirm('Bạn có chắc muốn cấm tài khoản này?')">
-                                            <i class="fas fa-ban me-1"></i>
-                                            Cấm tài khoản
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form method="post" asp-page-handler="UnbanUser" style="display: inline;" class="me-2">
-                                        <input type="hidden" name="id" value="@Model.UserDetail.UserID" />
-                                        <button type="submit" class="btn btn-success" 
-                                                onclick="return confirm('Bạn có chắc muốn bỏ cấm tài khoản này?')">
-                                            <i class="fas fa-check me-1"></i>
-                                            Bỏ cấm
-                                        </button>
-                                    </form>
-                                }
-                                
-                                @if (!Model.UserDetail.IsEmailVerified)
-                                {
-                                    <form method="post" asp-page-handler="VerifyEmail" style="display: inline;" class="me-2">
-                                        <input type="hidden" name="id" value="@Model.UserDetail.UserID" />
-                                        <button type="submit" class="btn btn-info">
-                                            <i class="fas fa-check-circle me-1"></i>
-                                            Xác thực Email
-                                        </button>
-                                    </form>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
+        
 
         <!-- Add/Edit User Form -->
         @if (Model.CurrentAction == "add" || Model.CurrentAction == "edit")
@@ -819,9 +620,9 @@
     <script>
         $(document).ready(function() {
             // Auto dismiss alerts after 8 seconds
-            setTimeout(function() {
-                $('.alert:not(.alert-warning):not(.alert-danger)').alert('close');
-            }, 8000);
+            // setTimeout(function() {
+            //     $('.alert:not(.alert-warning):not(.alert-danger)').alert('close');
+            // }, 8000);
 
             // Enhance form validation
             $('form').on('submit', function(e) {
