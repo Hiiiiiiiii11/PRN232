@@ -1,8 +1,22 @@
+using DrugUserPreventionUI.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
+
+// Configure API settings
+builder.Services.Configure<ApiConfiguration>(
+    builder.Configuration.GetSection("ApiSettings"));
+
+// Register ApiConfiguration as singleton
+builder.Services.AddSingleton<ApiConfiguration>(provider =>
+{
+    var config = new ApiConfiguration();
+    builder.Configuration.GetSection("ApiSettings").Bind(config);
+    return config;
+});
 
 // ✅ Add Authentication & Authorization
 builder.Services.AddAuthentication("Cookies")
@@ -39,10 +53,15 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    // Remove UseHsts() for Docker deployment
+    // app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Only redirect to HTTPS in development, not in Docker
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseRouting();
 
