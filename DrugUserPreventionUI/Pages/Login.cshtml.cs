@@ -119,8 +119,12 @@ namespace DrugUserPreventionUI.Pages
 
                             if (userInfo != null)
                             {
-                                // Thêm vào đây
+                                // Set all necessary session data
                                 HttpContext.Session.SetString("user_id", userInfo.UserId.ToString());
+                                HttpContext.Session.SetString("user_name", userInfo.UserName ?? "");
+                                HttpContext.Session.SetString("user_email", userInfo.Email ?? "");
+                                HttpContext.Session.SetString("user_role", userInfo.Role ?? "");
+                                
                                 // Only store the JWT token in cookie
                                 var cookieOptions = new CookieOptions
                                 {
@@ -221,10 +225,13 @@ namespace DrugUserPreventionUI.Pages
         {
             try
             {
-                // Only clear the token cookie
+                // Clear the token cookie
                 Response.Cookies.Delete("auth_token");
+                
+                // Clear all session data
+                HttpContext.Session.Clear();
 
-                Console.WriteLine("Auth token cleared - user logged out");
+                Console.WriteLine("Auth token and session cleared - user logged out");
 
                 return RedirectToPage(
                     "/Login",

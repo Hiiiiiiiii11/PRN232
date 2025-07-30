@@ -8,7 +8,7 @@ using Services.DTOs.NewArticle;
 using Services.DTOs.Tags;
 using Services.IService;
 
-namespace WebAPI.Controllers
+namespace DrugUsePrevention.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

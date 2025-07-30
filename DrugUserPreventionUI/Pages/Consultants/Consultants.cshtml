@@ -128,18 +128,24 @@
                                 </div>
 
                                 <!-- Book Appointment Button -->
+                                <!-- Enhanced Booking Options -->
+                                <a href="/consultants/@Model.ConsultantDetail.ConsultantID/calendar" class="btn btn-primary w-100 mt-3">
+                                    <i class="fas fa-calendar-alt"></i> Xem lịch & Đặt hẹn
+                                </a>
+                                
                                 @if (Model.IsAuthenticated)
                                 {
-                                    <button type="button" class="btn btn-primary w-100 mt-3" 
+                                    <button type="button" class="btn btn-outline-primary w-100 mt-2" 
                                             data-bs-toggle="modal" data-bs-target="#bookAppointmentModal">
-                                        <i class="fas fa-calendar-plus"></i> Đặt lịch hẹn
+                                        <i class="fas fa-clock"></i> Đặt lịch nhanh
                                     </button>
                                 }
                                 else
                                 {
-                                    <a href="/Account/Login?returnUrl=@Request.Path" class="btn btn-primary w-100 mt-3">
-                                        <i class="fas fa-sign-in-alt"></i> Đăng nhập để đặt lịch
-                                    </a>
+                                    <div class="alert alert-info mt-2 mb-0">
+                                        <i class="fas fa-info-circle"></i>
+                                        <a href="/Login" class="alert-link">Đăng nhập</a> để đặt lịch tư vấn chi tiết
+                                    </div>
                                 }
                             </div>
 

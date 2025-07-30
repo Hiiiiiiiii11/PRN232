@@ -34,6 +34,9 @@ namespace Repositories
         public virtual DbSet<CourseContent> CourseContents { get; set; }
         public virtual DbSet<NewsArticle> NewsArticles { get; set; }
         public virtual DbSet<NewsTag> NewsTags { get; set; }
+        public virtual DbSet<ConsultantSchedule> ConsultantSchedules { get; set; }
+        public virtual DbSet<ConsultantAvailability> ConsultantAvailabilities { get; set; }
+        public virtual DbSet<AppointmentSlot> AppointmentSlots { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -54,6 +57,33 @@ namespace Repositories
             modelBuilder.Entity<Consultant>().Property(a => a.WorkingHours)
                 .HasConversion(new WorkingHoursConverter())
                 .HasColumnType("nvarchar(max)");
+
+            // Configure ConsultantSchedule relationships
+            modelBuilder.Entity<ConsultantSchedule>()
+                .HasOne(cs => cs.Consultant)
+                .WithMany()
+                .HasForeignKey(cs => cs.ConsultantID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ConsultantAvailability relationships
+            modelBuilder.Entity<ConsultantAvailability>()
+                .HasOne(ca => ca.Consultant)
+                .WithMany()
+                .HasForeignKey(ca => ca.ConsultantID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure AppointmentSlot relationships
+            modelBuilder.Entity<AppointmentSlot>()
+                .HasOne(slot => slot.Consultant)
+                .WithMany()
+                .HasForeignKey(slot => slot.ConsultantID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AppointmentSlot>()
+                .HasOne(slot => slot.Appointment)
+                .WithMany()
+                .HasForeignKey(slot => slot.AppointmentID)
+                .OnDelete(DeleteBehavior.SetNull);
 
             base.OnModelCreating(modelBuilder);
         }

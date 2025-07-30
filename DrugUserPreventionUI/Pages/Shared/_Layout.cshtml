@@ -647,7 +647,7 @@
         // Check if current page should show sidebar
         bool showSidebar = isAuthenticated && (isManager || isStaff || isConsultant || isMember);
         string currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
-        bool isDashboardPage = currentPage.Contains("Dashboard") || currentPage.Contains("Management") || currentPage.Contains("MyCourses") || currentPage.Contains("MyPrograms") || currentPage.Contains("ManageProgram") || currentPage.Contains("CourseDashboard") || currentPage.Contains("MyNewsArticle") || currentPage.Contains("NewsArticles");
+        bool isDashboardPage = currentPage.Contains("Dashboard") || currentPage.Contains("Management") || currentPage.Contains("MyCourses") || currentPage.Contains("ManageProgram") || currentPage.Contains("CourseDashboard") || currentPage.Contains("MyNewsArticle") || currentPage.Contains("NewsArticles");
     }
 
     <div class="layout-wrapper">
@@ -762,10 +762,7 @@
                             <i class="fas fa-graduation-cap"></i>
                             <span>Khóa học đã đăng ký</span>
                         </a>
-@*                         <a href="/MyPrograms" class="sidebar-nav-link">
-                            <i class="fas fa-project-diagram"></i>
-                            <span>Chương trình đã đăng ký</span>
-                        </a> *@
+
                     }
 
 
