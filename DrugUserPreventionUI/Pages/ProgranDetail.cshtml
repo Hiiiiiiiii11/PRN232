@@ -1,0 +1,13 @@
+﻿@page "{id:int}"
+@model DrugUserPreventionUI.Pages.ProgramDetails.ProgramDetailsModel
+@{
+    ViewData["Title"] = "Chi tiết chương trình";
+}
+
+<h2>@Model.Program.Title</h2>
+
+<img src="@Model.Program.ThumbnailURL" alt="Ảnh chương trình" style="max-width:300px;" />
+
+<p><strong>Thời gian:</strong> @Model.Program.StartDate:dd/MM/yyyy - @Model.Program.EndDate:dd/MM/yyyy</p>
+<p><strong>Địa điểm:</strong> @Model.Program.Location</p>
+<p><strong>Mô tả:</strong> @Model.Program.Description</p>

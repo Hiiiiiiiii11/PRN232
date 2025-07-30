@@ -119,16 +119,16 @@ namespace Services.Service
                 return null;
             }
 
-            //if (
-            //    new PasswordHasher<User>().VerifyHashedPassword(
-            //        user,
-            //        user.PasswordHash,
-            //        request.Password
-            //    ) == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed
-            //)
-            //{
-            //    return null;
-            //}
+            if (
+                new PasswordHasher<User>().VerifyHashedPassword(
+                    user,
+                    user.PasswordHash,
+                    request.Password
+                ) == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed
+            )
+            {
+                return null;
+            }
 
             return await CreateTokenResponse(user);
         }

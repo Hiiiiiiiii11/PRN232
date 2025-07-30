@@ -10,7 +10,9 @@ using Repositories.IRepository.Appointments;
 using Repositories.IRepository.Categories;
 using Repositories.IRepository.Consultants;
 using Repositories.IRepository.Courses;
+using Repositories.IRepository.IProgramPaticipate;
 using Repositories.IRepository.NewsArticles;
+using Repositories.IRepository.Programs;
 using Repositories.IRepository.Tags;
 using Repositories.IRepository.Users;
 using Repositories.Repository;
@@ -20,6 +22,8 @@ using Repositories.Repository.Categories;
 using Repositories.Repository.Consultants;
 using Repositories.Repository.Courses;
 using Repositories.Repository.NewsArticles;
+using Repositories.Repository.ProgramPaticipate;
+using Repositories.Repository.Programs;
 using Repositories.Repository.Tags;
 using Repositories.Repository.Users;
 using Services.IService;
@@ -30,7 +34,7 @@ using Services.Service;
 
 namespace DrugUsePrevention
 {
-    public class Program
+    public class Programs
     {
         public static void Main(string[] args)
         {
@@ -73,6 +77,11 @@ namespace DrugUsePrevention
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<IConsultantUserService, ConsultantUserService>();
             builder.Services.AddScoped<IConsultantUserRepository, ConsultantUserRepository>();
+            builder.Services.AddScoped<IProgramRepository, ProgramRepository>();
+            builder.Services.AddScoped<IProgramParticipationRepository, ProgramParticipationRepository>();
+            builder.Services.AddScoped<IProgramService, ProgramService>();
+            builder.Services.AddScoped<IProgramParticipationService, ProgramParticipationService>();
+
             // Add Controllers
             builder.Services.AddControllers();
 

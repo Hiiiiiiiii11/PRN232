@@ -647,7 +647,7 @@
         // Check if current page should show sidebar
         bool showSidebar = isAuthenticated && (isManager || isStaff || isConsultant || isMember);
         string currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
-        bool isDashboardPage = currentPage.Contains("Dashboard") || currentPage.Contains("Management") || currentPage.Contains("MyCourses") || currentPage.Contains("CourseDashboard") || currentPage.Contains("MyNewsArticle");
+        bool isDashboardPage = currentPage.Contains("Dashboard") || currentPage.Contains("Management") || currentPage.Contains("MyCourses") || currentPage.Contains("MyPrograms") || currentPage.Contains("ManageProgram") || currentPage.Contains("CourseDashboard") || currentPage.Contains("MyNewsArticle") || currentPage.Contains("NewsArticles");
     }
 
     <div class="layout-wrapper">
@@ -696,11 +696,11 @@
                             <i class="fas fa-users"></i>
                             <span>Quản lý tài khoản</span>
                         </a>
-                        <a href="/Programs" class="sidebar-nav-link">
+                        <a href="/ManageProgram" class="sidebar-nav-link">
                             <i class="fas fa-project-diagram"></i>
                             <span>Quản lý chương trình</span>
                         </a>
-                        <a href="/NewsActicles/NewsActicles?action=news" class="sidebar-nav-link">
+                        <a href="/NewsArticles" class="sidebar-nav-link">
                             <i class="fas fa-newspaper"></i>
                             <span>Quản lý tin tức</span>
                         </a>
@@ -708,10 +708,10 @@
                             <i class="fas fa-calendar-alt"></i>
                             <span>Lịch Consultant</span>
                         </a>
-                        <a href="/Reports" class="sidebar-nav-link">
+@*                         <a href="/Reports" class="sidebar-nav-link">
                             <i class="fas fa-chart-bar"></i>
                             <span>Báo cáo</span>
-                        </a>
+                        </a> *@
                     }
 
                     <!-- STAFF SIDEBAR -->
@@ -730,10 +730,10 @@
                             <i class="fas fa-newspaper"></i>
                             <span>Quản lý tin tức</span>
                         </a>
-                        <a href="/Calendar/Consultants" class="sidebar-nav-link">
+@*                         <a href="/Calendar/Consultants" class="sidebar-nav-link">
                             <i class="fas fa-calendar-alt"></i>
                             <span>Lịch Consultant</span>
-                        </a>
+                        </a> *@
                     }
 
                     <!-- CONSULTANT SIDEBAR -->
@@ -766,24 +766,9 @@
                             <i class="fas fa-project-diagram"></i>
                             <span>Chương trình đã đăng ký</span>
                         </a>
-@*                         <a href="/Profile" class="sidebar-nav-link">
-                            <i class="fas fa-user-edit"></i>
-                            <span>Hồ sơ cá nhân</span>
-                        </a> *@
                     }
 
-                    <!-- COMMON SIDEBAR -->
-@*                     <div class="sidebar-section-title">Cài đặt</div>
-                    <a href="/Profile" class="sidebar-nav-link">
-                        <i class="fas fa-user-cog"></i>
-                        <span>Tài khoản của tôi</span>
-                    </a>
-                    <form method="post" asp-page="/Login" asp-page-handler="Logout" style="display: inline;">
-                        <button type="submit" class="sidebar-nav-link border-0 bg-transparent w-100 text-start" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Đăng xuất</span>
-                        </button>
-                    </form> *@
+
                 </div>
             </nav>
         }
@@ -845,7 +830,7 @@
                                                        </a>
                                                    </li>
                                                }
-                                               @if (isStaff || isManager)
+@*                                                @if (isStaff || isManager)
                                                {
                                                    <li>
                                                        <a class="dropdown-item" asp-area="" asp-page="/UserManagement">
@@ -853,8 +838,8 @@
                                                            Quản lý Người dùng
                                                        </a>
                                                    </li>
-                                               }
-                                               @if (isManager)
+                                               } *@
+@*                                                @if (isManager)
                                                {
                                                    <li><hr class="dropdown-divider"></li>
                                                    <li>
@@ -863,7 +848,7 @@
                                                            Báo cáo
                                                        </a>
                                                    </li>
-                                               }
+                                               } *@
                                            </ul>
                                        </li>
                                    }
@@ -963,11 +948,23 @@
                                            </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
-                                                <a class="dropdown-item" asp-area="" asp-page="/Courses/MyCourses">
-                                                    <i class="fas fa-user-edit me-2"></i>
-                                                    Khoá học của tôi
-                                                </a>
+                                                @if (isConsultant)
+                                                {
+                                                    <a class="dropdown-item" asp-page="/CourseDashboard/CourseDashboard">
+                                                        <i class="fas fa-user-edit me-2"></i>
+                                                        Khoá học của tôi
+                                                    </a>
+                                                }
+
+                                                @if(isMember)
+                                                {
+                                                    <a class="dropdown-item" asp-area="" asp-page="/Courses/MyCourses">
+                                                        <i class="fas fa-user-edit me-2"></i>
+                                                        Khoá học của tôi
+                                                    </a>
+                                                }
                                             </li>
+
                                            <li><hr class="dropdown-divider"></li>
                                            <li>
                                                <form method="post" asp-page="/Login" asp-page-handler="Logout" style="display: inline;">
@@ -1040,38 +1037,6 @@
        </div> <!-- End main-content -->
    </div> <!-- End layout-wrapper -->
 
-@*    <footer class="border-top footer text-muted">
-       <div class="container">
-           <div class="row">
-               <div class="col-md-6">
-                   <div class="d-flex align-items-center">
-                       <i class="fas fa-shield-heart me-2"></i>
-                       <span>&copy; 2025 - Drug User Prevention System</span>
-                   </div>
-                   @if (isAuthenticated)
-                   {
-                       <small class="text-muted">
-                           Đăng nhập với quyền: <strong>@userRole</strong>
-                       </small>
-                   }
-               </div>
-               <div class="col-md-6 text-md-end">
-                   <a asp-area="" asp-page="/Privacy" class="me-3">
-                       <i class="fas fa-user-shield me-1"></i>
-                       Quyền riêng tư
-                   </a>
-                   <a href="#" class="me-3">
-                       <i class="fas fa-phone me-1"></i>
-                       Liên hệ
-                   </a>
-                   <a href="#">
-                       <i class="fas fa-info-circle me-1"></i>
-                       Về chúng tôi
-                   </a>
-               </div>
-           </div>
-       </div>
-   </footer> *@
 
    <!-- ✅ JavaScript Libraries -->
    <script src="~/lib/jquery/dist/jquery.min.js"></script>

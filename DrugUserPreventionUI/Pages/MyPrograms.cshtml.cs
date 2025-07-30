@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
 using DrugUserPreventionUI.Models.Common;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
+using DrugUserPreventionUI.Pages.ProgramDetails;
 
-namespace DrugUserPreventionUI.Pages
+namespace DrugUserPreventionUI.Pages.MyPrograms
 {
     public class MyProgramsModel : PageModel
     {
@@ -25,12 +27,12 @@ namespace DrugUserPreventionUI.Pages
         public string? ErrorMessage { get; set; }
 
         public async Task<IActionResult> OnGetAsync(
-            string? search = null, 
-            string? status = null, 
+            string? search = null,
+            string? status = null,
             int page = 1)
         {
             // Check if user is logged in
-            var token = HttpContext.Session.GetString("JWTToken");
+            var token = HttpContext.Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(token))
             {
                 return RedirectToPage("/Login", new { returnUrl = "/MyPrograms" });
@@ -55,38 +57,104 @@ namespace DrugUserPreventionUI.Pages
 
         private async Task LoadUserProgramsAsync()
         {
-            // TODO: Implement API for Programs when backend is ready
-            // For now, return empty list to prevent errors
-            UserPrograms = new List<UserProgramModel>();
-            CurrentPage = 1;
-            TotalPages = 1;
-            TotalItems = 0;
-            
-            // Optional: Add info message that this feature is under development
-            ErrorMessage = null; // Clear any previous errors
+            ErrorMessage = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                var token = HttpContext.Request.Cookies["auth_token"];
+                var userId = GetCurrentUserId();
+
+                if (userId == 0)
+                {
+                    ErrorMessage = "Không thể xác định người dùng.";
+                    return;
+                }
+
+                // Gửi yêu cầu GET
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{API_BASE_URL}/api/ProgramParticipation/user/{userId}");
+
+                var response = await client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+                    var programList = JsonSerializer.Deserialize<List<UserProgramModel>>(json, options);
+
+                    if (programList != null)
+                    {
+                        UserPrograms = programList;
+                        TotalItems = programList.Count;
+                        TotalPages = 1;
+                        CurrentPage = 1;
+                    }
+                }
+                else
+                {
+                    ErrorMessage = $"Lỗi API: {response.StatusCode}";
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Lỗi gọi API: {ex.Message}";
+            }
         }
 
-        private int GetCurrentUserId()
+
+        public int GetCurrentUserId()
         {
-            var userIdClaim = HttpContext.Session.GetString("UserId");
-            return int.TryParse(userIdClaim, out int userId) ? userId : 0;
+            var token = HttpContext.Request.Cookies["auth_token"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+
+                var userIdClaim = jwt.Claims.FirstOrDefault(c =>
+                    c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+                    return userId;
+            }
+            return 0;
         }
+
     }
 
     // Models for the page
     public class UserProgramModel
     {
+        public int ParticipationID { get; set; }
+        public int? UserID { get; set; }
+        public string? UserFullName { get; set; }
+        public int? ProgramID { get; set; }
+        public string? ProgramTitle { get; set; }
+        public DateTime ParticipatedAt { get; set; }
+
+        // Thêm property để ánh xạ từ ProgramDetailDto
+        public ProgramDetailModel? Program { get; set; }
+
+        // Convenience properties để bind dễ hơn trong Razor view
+        public string? ProgramName => Program?.Title;
+        public string? Description => Program?.Description;
+        public string? ImageUrl => Program?.ThumbnailURL;
+        public DateTime StartDate => Program?.StartDate ?? DateTime.MinValue;
+        public DateTime EndDate => Program?.EndDate ?? DateTime.MinValue;
+        public string? Location => Program?.Location;
+    }
+
+    public class ProgramDetailModel
+    {
         public int ProgramID { get; set; }
-        public string ProgramName { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string ThumbnailURL { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Location { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty;
-        public string ParticipationStatus { get; set; } = string.Empty;
-        public double? Progress { get; set; }
-        public DateTime ParticipationDate { get; set; }
     }
+
+
 
     public class ProgramFilterModel
     {
@@ -111,4 +179,4 @@ namespace DrugUserPreventionUI.Pages
         public bool HasNextPage { get; set; }
         public bool HasPreviousPage { get; set; }
     }
-} 
+}

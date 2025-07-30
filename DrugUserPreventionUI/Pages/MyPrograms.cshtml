@@ -1,5 +1,5 @@
 @page "/MyPrograms"
-@model DrugUserPreventionUI.Pages.MyProgramsModel
+@model DrugUserPreventionUI.Pages.MyPrograms.MyProgramsModel
 @{
     ViewData["Title"] = "Chương trình đã đăng ký";
     Layout = "~/Pages/Shared/_Layout.cshtml";
@@ -92,7 +92,7 @@
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">@program.ProgramName</h5>
                             <p class="card-text text-muted flex-grow-1">@program.Description</p>
-                            
+
                             <div class="program-info mb-3">
                                 <div class="d-flex justify-content-between text-small mb-1">
                                     <span><i class="fas fa-calendar-alt me-1"></i>Bắt đầu: @program.StartDate.ToString("dd/MM/yyyy")</span>
@@ -100,14 +100,12 @@
                                 </div>
                                 <div class="d-flex justify-content-between text-small mb-2">
                                     <span><i class="fas fa-map-marker-alt me-1"></i>@program.Location</span>
-                                    <span class="badge @(program.ParticipationStatus == "Active" ? "bg-success" : program.ParticipationStatus == "Completed" ? "bg-primary" : "bg-secondary")">
-                                        @program.ParticipationStatus
-                                    </span>
+                                    <span class="badge bg-info">Ngày tham gia: @program.ParticipatedAt.ToString("dd/MM/yyyy")</span>
                                 </div>
                             </div>
 
                             <!-- Progress Bar for Active Programs -->
-                            @if (program.ParticipationStatus == "Active" && program.Progress.HasValue)
+@*                             @if (program.ParticipationStatus == "Active" && program.Progress.HasValue)
                             {
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between mb-1">
@@ -118,20 +116,21 @@
                                         <div class="progress-bar" role="progressbar" style="width: @program.Progress.Value%" aria-valuenow="@program.Progress.Value" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
                                 </div>
-                            }
+                            } *@
 
                             <div class="card-actions mt-auto">
+
                                 <a href="/Programs/@program.ProgramID" class="btn btn-primary btn-sm">
                                     <i class="fas fa-eye me-1"></i>
                                     Xem chi tiết
                                 </a>
-                                @if (program.ParticipationStatus == "Active")
+@*                                 @if (program.ParticipationStatus == "Active")
                                 {
                                     <button type="button" class="btn btn-outline-danger btn-sm" onclick="cancelParticipation(@program.ProgramID)">
                                         <i class="fas fa-times me-1"></i>
                                         Hủy tham gia
                                     </button>
-                                }
+                                } *@
                             </div>
                         </div>
                     </div>
