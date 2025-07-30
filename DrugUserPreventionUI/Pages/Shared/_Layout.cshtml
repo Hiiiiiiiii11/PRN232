@@ -647,7 +647,7 @@
         // Check if current page should show sidebar
         bool showSidebar = isAuthenticated && (isManager || isStaff || isConsultant || isMember);
         string currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
-        bool isDashboardPage = currentPage.Contains("Dashboard") || currentPage.Contains("Management") || currentPage.Contains("MyCourses") ||currentPage.Contains("MyPrograms") || currentPage.Contains("CourseDashboard") || currentPage.Contains("MyNewsArticle");
+        bool isDashboardPage = currentPage.Contains("Dashboard") || currentPage.Contains("Management") || currentPage.Contains("MyCourses") || currentPage.Contains("MyPrograms") || currentPage.Contains("ManageProgram") || currentPage.Contains("CourseDashboard") || currentPage.Contains("MyNewsArticle") || currentPage.Contains("NewsArticles");
     }
 
     <div class="layout-wrapper">
@@ -696,11 +696,11 @@
                             <i class="fas fa-users"></i>
                             <span>Quản lý tài khoản</span>
                         </a>
-                        <a href="/Programs" class="sidebar-nav-link">
+                        <a href="/ManageProgram" class="sidebar-nav-link">
                             <i class="fas fa-project-diagram"></i>
                             <span>Quản lý chương trình</span>
                         </a>
-                        <a href="/NewsActicles/NewsActicles?action=news" class="sidebar-nav-link">
+                        <a href="/NewsArticles" class="sidebar-nav-link">
                             <i class="fas fa-newspaper"></i>
                             <span>Quản lý tin tức</span>
                         </a>
@@ -708,10 +708,10 @@
                             <i class="fas fa-calendar-alt"></i>
                             <span>Lịch Consultant</span>
                         </a>
-                        <a href="/Reports" class="sidebar-nav-link">
+@*                         <a href="/Reports" class="sidebar-nav-link">
                             <i class="fas fa-chart-bar"></i>
                             <span>Báo cáo</span>
-                        </a>
+                        </a> *@
                     }
 
                     <!-- STAFF SIDEBAR -->
@@ -730,11 +730,10 @@
                             <i class="fas fa-newspaper"></i>
                             <span>Quản lý tin tức</span>
                         </a>
-                        <a href="/Calendar/Consultan
-ts" class="sidebar-nav-link">
+@*                         <a href="/Calendar/Consultants" class="sidebar-nav-link">
                             <i class="fas fa-calendar-alt"></i>
                             <span>Lịch Consultant</span>
-                        </a>
+                        </a> *@
                     }
 
                     <!-- CONSULTANT SIDEBAR -->
@@ -831,7 +830,7 @@ ts" class="sidebar-nav-link">
                                                        </a>
                                                    </li>
                                                }
-                                               @if (isStaff || isManager)
+@*                                                @if (isStaff || isManager)
                                                {
                                                    <li>
                                                        <a class="dropdown-item" asp-area="" asp-page="/UserManagement">
@@ -839,7 +838,7 @@ ts" class="sidebar-nav-link">
                                                            Quản lý Người dùng
                                                        </a>
                                                    </li>
-                                               }
+                                               } *@
 @*                                                @if (isManager)
                                                {
                                                    <li><hr class="dropdown-divider"></li>

@@ -1,0 +1,151 @@
+﻿@page "/ManageProgram"
+@model DrugUserPreventionUI.Pages.ManageProgram.ManageProgramsModel
+@{
+    ViewData["Title"] = "Quản lý chương trình";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">Quản lý chương trình</h1>
+        <button class="btn btn-primary" onclick="showCreateModal()">
+            <i class="fas fa-plus-circle me-1"></i> Thêm chương trình
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">@Model.SuccessMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Tiêu đề</th>
+                <th>Thời gian</th>
+                <th>Địa điểm</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Programs)
+            {
+                <tr>
+                    <td>@p.Title</td>
+                    <td>@p.StartDate.ToString("dd/MM/yyyy") - @p.EndDate.ToString("dd/MM/yyyy")</td>
+                    <td>@p.Location</td>
+                    <td>
+                        @if (p.IsActive)
+                        {
+                            <span class="badge bg-success">Đang hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Đã đóng</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="showEditModal(@Html.Raw(Json.Serialize(p)))">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@p.ProgramID" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Xóa chương trình này?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="programModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Save">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Thêm/Sửa chương trình</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ProgramID" id="ProgramID" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Tiêu đề</label>
+                        <input type="text" class="form-control" name="Title" id="Title" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea class="form-control" name="Description" id="Description" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ảnh Thumbnail URL</label>
+                        <input type="text" class="form-control" name="ThumbnailURL" id="ThumbnailURL" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label">Ngày bắt đầu</label>
+                            <input type="date" class="form-control" name="StartDate" id="StartDate" required />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Ngày kết thúc</label>
+                            <input type="date" class="form-control" name="EndDate" id="EndDate" required />
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">Địa điểm</label>
+                        <input type="text" class="form-control" name="Location" id="Location" required />
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" name="IsActive" id="IsActive">
+                        <label class="form-check-label">Kích hoạt</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showCreateModal() {
+        document.getElementById("modalTitle").textContent = "Thêm chương trình";
+        clearForm();
+        new bootstrap.Modal(document.getElementById("programModal")).show();
+    }
+
+    function showEditModal(data) {
+        document.getElementById("modalTitle").textContent = "Sửa chương trình";
+        for (const key in data) {
+            if (document.getElementById(key)) {
+                if (key === "IsActive")
+                    document.getElementById(key).checked = data[key];
+                else
+                    document.getElementById(key).value = data[key];
+            }
+        }
+        new bootstrap.Modal(document.getElementById("programModal")).show();
+    }
+
+    function clearForm() {
+        document.querySelectorAll('#programModal input, #programModal textarea').forEach(input => {
+            if (input.type === 'checkbox') input.checked = false;
+            else input.value = '';
+        });
+    }
+</script>

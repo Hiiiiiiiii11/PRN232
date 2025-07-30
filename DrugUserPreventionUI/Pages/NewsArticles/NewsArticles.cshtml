@@ -1,7 +1,8 @@
-﻿@page
+﻿@page "/NewsArticles"
 @model DrugUserPreventionUI.Pages.NewsArticles.NewsArticleModel
 @{
     ViewData["Title"] = "Tin tức";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
 }
 
 <div class="container-fluid">
@@ -96,7 +97,7 @@
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Chi tiết tin tức</h5>
-                            <a href="/NewsArticles/NewsArticles" class="btn btn-secondary btn-sm">
+                            <a href="/NewsArticles" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-arrow-left"></i> Quay lại
                             </a>
                         </div>
@@ -158,7 +159,7 @@
                                     }
                                 </div>
                                 <h5 class="card-title">
-                                    <a href="/NewsArticles/NewsArticles?action=detail&id=@article.NewsArticleID"
+                                    <a href="/NewsArticles?action=detail&id=@article.NewsArticleID"
                                        class="text-decoration-none">
                                         @article.NewsTitle
                                     </a>
@@ -321,7 +322,7 @@
                                         <div class="card border-0 bg-light h-100">
                                             <div class="card-body">
                                                 <h6 class="card-title">
-                                                    <a href="/NewsArticles/NewsArticles?action=detail&id=@recentArticle.NewsArticleID"
+                                                    <a href="/NewsArticles?action=detail&id=@recentArticle.NewsArticleID"
                                                        class="text-decoration-none">
                                                         @recentArticle.NewsTitle
                                                     </a>
