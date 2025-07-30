@@ -3,11 +3,16 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages
 {
     public class RegisterModel : PageModel
     {
+        public RegisterModel()
+        {
+        }
+
         [BindProperty]
         public RegisterRequest RegisterForm { get; set; } = new();
 
@@ -25,7 +30,7 @@ namespace DrugUserPreventionUI.Pages
             try
             {
                 var response = await client.PostAsync(
-                    $"https://localhost:7045/register{query}",
+                    $"{ApiUrlHelper.GetAuthUrl()}/register{query}",
                     null
                 );
                 if (response.IsSuccessStatusCode)

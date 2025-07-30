@@ -5,6 +5,7 @@ using DrugUserPreventionUI.Models.Common;
 using DrugUserPreventionUI.Models.NewsArticles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages.NewsArticles
 {
@@ -12,8 +13,6 @@ namespace DrugUserPreventionUI.Pages.NewsArticles
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<NewsArticleModel> _logger;
-        private const string BASE_API_URL = "https://localhost:7045/api/NewsArticles";
-        private const string CATEGORIES_API_URL = "https://localhost:7045/api/Categories";
 
         public MyNewsArticleModel(
             IHttpClientFactory httpClientFactory,
@@ -204,7 +203,7 @@ namespace DrugUserPreventionUI.Pages.NewsArticles
             {
                 // Load Categories
                 var categoriesResponse = await client.GetAsync(
-                    $"{CATEGORIES_API_URL}?pageSize=100"
+                    $"{ApiUrlHelper.GetCategoriesApiUrl()}?pageSize=100"
                 );
                 if (categoriesResponse.IsSuccessStatusCode)
                 {
@@ -221,7 +220,7 @@ namespace DrugUserPreventionUI.Pages.NewsArticles
                 }
 
                 // Load News Sources (get unique sources from existing news)
-                var sourcesResponse = await client.GetAsync($"{BASE_API_URL}?pageSize=1000");
+                var sourcesResponse = await client.GetAsync($"{ApiUrlHelper.GetNewsArticlesApiUrl()}?pageSize=1000");
                 if (sourcesResponse.IsSuccessStatusCode)
                 {
                     var responseContent = await sourcesResponse.Content.ReadAsStringAsync();
@@ -276,8 +275,8 @@ namespace DrugUserPreventionUI.Pages.NewsArticles
 
                 // Use admin endpoint if user is admin, otherwise use public endpoint
                 var endpoint = IsAdminUser
-                    ? $"{BASE_API_URL}/admin{queryString}"
-                    : $"{BASE_API_URL}{queryString}";
+                    ? $"{ApiUrlHelper.GetNewsArticlesApiUrl()}/admin{queryString}"
+                    : $"{ApiUrlHelper.GetNewsArticlesApiUrl()}{queryString}";
                 var httpClient = IsAdminUser ? GetAuthenticatedClient() : client;
 
                 _logger.LogInformation("Calling API endpoint: {Endpoint}", endpoint);
@@ -380,7 +379,7 @@ namespace DrugUserPreventionUI.Pages.NewsArticles
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/{id}");
+                var response = await client.GetAsync($"{ApiUrlHelper.GetNewsArticlesApiUrl()}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -421,7 +420,7 @@ namespace DrugUserPreventionUI.Pages.NewsArticles
                 var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
 
                 var response = await client.GetAsync(
-                    $"{BASE_API_URL}/category/{categoryId}{queryString}"
+                    $"{ApiUrlHelper.GetNewsArticlesApiUrl()}/category/{categoryId}{queryString}"
                 );
                 if (response.IsSuccessStatusCode)
                 {
@@ -466,7 +465,7 @@ namespace DrugUserPreventionUI.Pages.NewsArticles
 
                 var queryString = "?" + string.Join("&", queryParams);
 
-                var response = await client.GetAsync($"{BASE_API_URL}/search{queryString}");
+                var response = await client.GetAsync($"{ApiUrlHelper.GetNewsArticlesApiUrl()}/search{queryString}");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();

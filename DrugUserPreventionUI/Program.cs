@@ -15,6 +15,10 @@ builder.Services.AddSingleton<ApiConfiguration>(provider =>
 {
     var config = new ApiConfiguration();
     builder.Configuration.GetSection("ApiSettings").Bind(config);
+    
+    // Configure static helper
+    DrugUserPreventionUI.Configuration.ApiUrlHelper.Configure(config);
+    
     return config;
 });
 

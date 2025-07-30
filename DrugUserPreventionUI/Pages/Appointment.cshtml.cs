@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
 using System.Net.Http;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages
 {
     public class AppointmentModel : PageModel
     {
         public IHttpClientFactory HttpClientFactory;
+        
         public AppointmentModel(IHttpClientFactory httpClientFactory)
         {
             HttpClientFactory = httpClientFactory;
@@ -22,7 +24,7 @@ namespace DrugUserPreventionUI.Pages
             {
                 var cliente = HttpClientFactory.CreateClient();
 
-                var httpResponseMessager = await cliente.GetAsync("https://localhost:7045/api/Appointment");
+                var httpResponseMessager = await cliente.GetAsync($"{ApiUrlHelper.GetAppointmentApiUrl()}");
                 httpResponseMessager.EnsureSuccessStatusCode();
                 var apiResponse = await httpResponseMessager.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<AppointmentDTO>>>();
 

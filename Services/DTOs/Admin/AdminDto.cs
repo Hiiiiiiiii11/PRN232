@@ -75,7 +75,7 @@ namespace Services.DTOs.Admin
         public string NewPassword { get; set; }
     }
 
-    public class ChangePasswordRequest
+    public class AdminChangePasswordRequest
     {
         [Required(ErrorMessage = "ID người dùng không được để trống")]
         public int UserID { get; set; }

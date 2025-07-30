@@ -3,17 +3,19 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
 using System.Text.Json;
 using DrugUserPreventionUI.Models.Common;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages.ProgramDetails
 {
     public class ProgramDetailsModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string API_BASE_URL = "https://localhost:7045";
+        private readonly ApiConfiguration _apiConfig;
 
-        public ProgramDetailsModel(IHttpClientFactory httpClientFactory)
+        public ProgramDetailsModel(IHttpClientFactory httpClientFactory, ApiConfiguration apiConfig)
         {
             _httpClientFactory = httpClientFactory;
+            _apiConfig = apiConfig;
         }
 
         public ProgramDetailDto Program { get; set; }
@@ -21,7 +23,7 @@ namespace DrugUserPreventionUI.Pages.ProgramDetails
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"{API_BASE_URL}/api/Programs/{id}");
+            var response = await client.GetAsync($"{_apiConfig.BaseUrl}/api/Programs/{id}");
 
             if (!response.IsSuccessStatusCode)
             {

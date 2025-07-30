@@ -3,6 +3,7 @@ using DrugUserPreventionUI.Models.CourseDashboard;
 using DrugUserPreventionUI.Models.Courses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 using System.Text;
 using System.Text.Json;
 
@@ -11,7 +12,6 @@ namespace DrugUserPreventionUI.Pages.Courses
     public class CoursesModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string BASE_API_URL = "https://localhost:7045/api/Courses";
 
         public CoursesModel(IHttpClientFactory httpClientFactory)
         {
@@ -104,7 +104,7 @@ namespace DrugUserPreventionUI.Pages.Courses
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{BASE_API_URL}/{courseId}/register", null);
+                var response = await client.PostAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{courseId}/register", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -142,7 +142,7 @@ namespace DrugUserPreventionUI.Pages.Courses
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.DeleteAsync($"{BASE_API_URL}/{courseId}/unregister");
+                var response = await client.DeleteAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{courseId}/unregister");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -195,7 +195,7 @@ namespace DrugUserPreventionUI.Pages.Courses
 
             var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
 
-            var response = await client.GetAsync($"{BASE_API_URL}{queryString}");
+            var response = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}{queryString}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -217,7 +217,7 @@ namespace DrugUserPreventionUI.Pages.Courses
 
         private async Task LoadCourseDetail(HttpClient client, int id)
         {
-            var response = await client.GetAsync($"{BASE_API_URL}/{id}");
+            var response = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}");
             if (response.IsSuccessStatusCode)
             {
                 var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<Models.CourseDashboard.CourseResponseDto>>();
@@ -228,7 +228,7 @@ namespace DrugUserPreventionUI.Pages.Courses
         private async Task<IActionResult> RegisterForCourse(int courseId)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.PostAsync($"{BASE_API_URL}/{courseId}/register", null);
+            var response = await client.PostAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{courseId}/register", null);
 
             if (response.IsSuccessStatusCode)
             {
@@ -244,7 +244,7 @@ namespace DrugUserPreventionUI.Pages.Courses
         private async Task<IActionResult> UnregisterFromCourse(int courseId)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.DeleteAsync($"{BASE_API_URL}/{courseId}/unregister");
+            var response = await client.DeleteAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{courseId}/unregister");
 
             if (response.IsSuccessStatusCode)
             {
@@ -264,7 +264,7 @@ namespace DrugUserPreventionUI.Pages.Courses
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.GetAsync($"{BASE_API_URL}/{courseId}/is-registered");
+                var response = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{courseId}/is-registered");
 
                 if (response.IsSuccessStatusCode)
                 {

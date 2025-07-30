@@ -5,13 +5,13 @@ using System.Text;
 using System.Text.Json;
 using DrugUserPreventionUI.Models.CourseDashboard;
 using DrugUserPreventionUI.Models.Common;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages.CourseDashboard
 {
     public class CourseDashboardModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string BASE_API_URL = "https://localhost:7045/api/Courses";
 
         public CourseDashboardModel(IHttpClientFactory httpClientFactory)
         {
@@ -215,7 +215,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
                 });
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(BASE_API_URL, content);
+                var response = await client.PostAsync(ApiUrlHelper.GetCoursesApiUrl(), content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -271,7 +271,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
 
             // Load course first to check permissions
             var client = GetAuthenticatedClient();
-            var courseResponse = await client.GetAsync($"{BASE_API_URL}/{id}");
+            var courseResponse = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}");
             if (!courseResponse.IsSuccessStatusCode)
             {
                 return RedirectToPage("/CourseDashboard/CourseDashboard",
@@ -313,7 +313,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
                 });
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PutAsync($"{BASE_API_URL}/{id}", content);
+                var response = await client.PutAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -351,7 +351,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
 
             // Load course first to check permissions
             var client = GetAuthenticatedClient();
-            var courseResponse = await client.GetAsync($"{BASE_API_URL}/{id}");
+            var courseResponse = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}");
             if (!courseResponse.IsSuccessStatusCode)
             {
                 return RedirectToPage("/CourseDashboard/CourseDashboard",
@@ -369,7 +369,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
 
             try
             {
-                var response = await client.DeleteAsync($"{BASE_API_URL}/{id}");
+                var response = await client.DeleteAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -413,7 +413,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
                 var json = JsonSerializer.Serialize(isActive);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PatchAsync($"{BASE_API_URL}/{id}/toggle-status", content);
+                var response = await client.PatchAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}/toggle-status", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -458,7 +458,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
                 var json = JsonSerializer.Serialize(isAccept);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PatchAsync($"{BASE_API_URL}/{id}/approve", content);
+                var response = await client.PatchAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}/approve", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -540,7 +540,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
                 var json = JsonSerializer.Serialize(updateRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PutAsync($"https://localhost:7045/api/User/{currentUser.UserId}", content);
+                var response = await client.PutAsync($"{ApiUrlHelper.GetUserApiUrl()}/{currentUser.UserId}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -591,7 +591,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
 
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}{queryString}");
+                var response = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}{queryString}");
 
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
@@ -625,7 +625,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/{id}");
+                var response = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<CourseResponseDto>>();
@@ -647,7 +647,7 @@ namespace DrugUserPreventionUI.Pages.CourseDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/{id}");
+                var response = await client.GetAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<CourseResponseDto>>();

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
+using DrugUserPreventionUI.Configuration;
 using DrugUserPreventionUI.Models.Common;
 using DrugUserPreventionUI.Models.Courses;
 
@@ -9,8 +10,6 @@ namespace DrugUserPreventionUI.Pages.Courses
     public class MyCoursesModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string LEARNING_API_URL = "https://localhost:7045/api/Learning";
-        private const string COURSES_API_URL = "https://localhost:7045/api/Courses";
 
         public MyCoursesModel(IHttpClientFactory httpClientFactory)
         {
@@ -82,7 +81,7 @@ namespace DrugUserPreventionUI.Pages.Courses
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.DeleteAsync($"{COURSES_API_URL}/{courseId}/unregister");
+                var response = await client.DeleteAsync($"{ApiUrlHelper.GetCoursesApiUrl()}/{courseId}/unregister");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -131,7 +130,7 @@ namespace DrugUserPreventionUI.Pages.Courses
                 var json = JsonSerializer.Serialize(updateDto);
                 var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-                var response = await client.PatchAsync($"{LEARNING_API_URL}/progress", content);
+                var response = await client.PatchAsync($"{ApiUrlHelper.GetLearningApiUrl()}/progress", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -168,7 +167,7 @@ namespace DrugUserPreventionUI.Pages.Courses
         {
             try
             {
-                var response = await client.GetAsync($"{LEARNING_API_URL}/dashboard");
+                var response = await client.GetAsync($"{ApiUrlHelper.GetLearningApiUrl()}/dashboard");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -201,7 +200,7 @@ namespace DrugUserPreventionUI.Pages.Courses
 
             var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
 
-            var response = await client.GetAsync($"{LEARNING_API_URL}/my-courses{queryString}");
+            var response = await client.GetAsync($"{ApiUrlHelper.GetLearningApiUrl()}/my-courses{queryString}");
 
             if (response.IsSuccessStatusCode)
             {
