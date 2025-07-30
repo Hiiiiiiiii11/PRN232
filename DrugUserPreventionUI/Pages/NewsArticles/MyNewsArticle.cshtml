@@ -246,7 +246,7 @@
                           i <= Math.Min(Model.PaginationInfo.TotalPages, Model.PaginationInfo.CurrentPage + 2);
                           i++)
                             {
-                                            <li class="page-item @(i == Model.PaginationInfo.CurrentPage ? "active" : "")">
+                                            <li class="page-item @(i == Model.PaginationInfo.CurrentPage ? "active" : "inactive")">
                                                 <a class="page-link" href="@Url.Page("/NewsArticles/NewsArticles", new { pageIndex = i, pageSize = Model.FilterModel.PageSize })">
                                         @i
                                                 </a>
