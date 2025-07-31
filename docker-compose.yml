@@ -1,0 +1,84 @@
+services:
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: drugprevention-db
+    environment:
+      SA_PASSWORD: "DrugPrevention@2024"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1434:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./database_script.sql:/docker-entrypoint-initdb.d/database_script.sql:ro
+    networks:
+      - drugprevention-network
+    restart: unless-stopped
+    # Temporarily disable health check since SQL Server is running correctly
+    # healthcheck:
+    #   test: ["CMD-SHELL", "exit 0"]
+    #   interval: 15s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 30s
+
+  # Drug Prevention API
+  api:
+    build:
+      context: .
+      dockerfile: DrugUsePrevention/Dockerfile
+    container_name: drugprevention-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnectionString=Server=db;Database=DrugUsePreventionDB;User ID=sa;Password=DrugPrevention@2024;TrustServerCertificate=True;Connection Timeout=30;
+      - AppSettings__Token=this_is_a_super_long_secret_key_just_for_HS512_security_purposes_in_docker_123!
+      - AppSettings__Issuer=DrugPreventionApp
+      - AppSettings__Audience=DrugPreventionApp
+      - MailSettings__Mail=templateasp.tien@gmail.com
+      - MailSettings__DisplayName=Drug Prevention Admin
+      - MailSettings__Password=qhbo kwkb fbjz orxo
+      - MailSettings__Host=smtp.gmail.com
+      - MailSettings__Port=587
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+    networks:
+      - drugprevention-network
+    restart: unless-stopped
+    volumes:
+      - api_uploads:/app/uploads
+
+  # Drug Prevention UI
+  ui:
+    build:
+      context: .
+      dockerfile: DrugUserPreventionUI/Dockerfile
+    container_name: drugprevention-ui
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8082
+      - ApiSettings__BaseUrl=http://api:8080
+    ports:
+      - "3000:8082"
+    depends_on:
+      - api
+    networks:
+      - drugprevention-network
+    restart: unless-stopped
+    volumes:
+      - ui_uploads:/app/wwwroot/uploads
+
+networks:
+  drugprevention-network:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+    driver: local
+  api_uploads:
+    driver: local
+  ui_uploads:
+    driver: local

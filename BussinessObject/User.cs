@@ -15,10 +15,10 @@ namespace BussinessObjects
         public string Username { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public string Phone { get; set; }
+        public string? Phone { get; set; }
         public string? AvatarUrl { get; set; } // URL đến ảnh đại diện của người dùng
         public DateTime? DateOfBirth { get; set; }
-        public string Gender { get; set; } // Male, Female, Other
+        public string? Gender { get; set; } // Male, Female, Other
         public string Role { get; set; } = "Guest";
         public string Status { get; set; } = "Active"; // Active, Inactive, Banned
         public DateTime CreatedAt { get; set; }
@@ -31,10 +31,10 @@ namespace BussinessObjects
         public DateTime? ResetPasswordExpiry { get; set; }
         public virtual Consultant? ConsultantProfile { get; set; }
 
-        public virtual ICollection<Course> CreatedCourses { get; set; }
-        public virtual ICollection<CourseRegistration> CourseRegistrations { get; set; }
-        public virtual ICollection<UserSurveyResponse> SurveyResponses { get; set; }
-        public virtual ICollection<Appointment> Appointments { get; set; }
-        public virtual ICollection<ProgramParticipation> Participations { get; set; }
+        public virtual ICollection<Course>? CreatedCourses { get; set; }
+        public virtual ICollection<CourseRegistration>? CourseRegistrations { get; set; }
+        public virtual ICollection<UserSurveyResponse>? SurveyResponses { get; set; }
+        public virtual ICollection<Appointment>? Appointments { get; set; }
+        public virtual ICollection<ProgramParticipation>? Participations { get; set; }
     }
 }

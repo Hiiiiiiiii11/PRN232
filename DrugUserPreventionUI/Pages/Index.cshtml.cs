@@ -5,6 +5,7 @@ using DrugUserPreventionUI.Models.Courses;
 using DrugUserPreventionUI.Models.NewsArticles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages
 {
@@ -12,14 +13,13 @@ namespace DrugUserPreventionUI.Pages
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<IndexModel> _logger;
-        private const string NEWS_API_URL = "https://localhost:7045/api/NewsArticles";
-        private const string COURSES_API_URL = "https://localhost:7045/api/Courses";
-        private const string CATEGORIES_API_URL = "https://localhost:7045/api/Categories";
+        private readonly ApiConfiguration _apiConfig;
 
-        public IndexModel(IHttpClientFactory httpClientFactory, ILogger<IndexModel> logger)
+        public IndexModel(IHttpClientFactory httpClientFactory, ILogger<IndexModel> logger, ApiConfiguration apiConfig)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _apiConfig = apiConfig;
         }
 
         // JSON Options for consistent deserialization
@@ -104,7 +104,7 @@ namespace DrugUserPreventionUI.Pages
             try
             {
                 var response = await client.GetAsync(
-                    $"{NEWS_API_URL}?pageSize=6&newsStatus=Active"
+                    $"{_apiConfig.NewsArticlesApiUrl}?pageSize=6&newsStatus=Active"
                 );
                 if (response.IsSuccessStatusCode)
                 {
@@ -130,7 +130,7 @@ namespace DrugUserPreventionUI.Pages
             try
             {
                 var response = await client.GetAsync(
-                    $"{NEWS_API_URL}?pageSize=4&newsStatus=Active"
+                    $"{_apiConfig.NewsArticlesApiUrl}?pageSize=4&newsStatus=Active"
                 );
                 if (response.IsSuccessStatusCode)
                 {
@@ -155,7 +155,7 @@ namespace DrugUserPreventionUI.Pages
         {
             try
             {
-                var response = await client.GetAsync($"{COURSES_API_URL}?pageSize=6&isActive=true");
+                var response = await client.GetAsync($"{_apiConfig.CoursesApiUrl}?pageSize=6&isActive=true");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -179,7 +179,7 @@ namespace DrugUserPreventionUI.Pages
         {
             try
             {
-                var response = await client.GetAsync($"{COURSES_API_URL}?pageSize=4&isActive=true");
+                var response = await client.GetAsync($"{_apiConfig.CoursesApiUrl}?pageSize=4&isActive=true");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -203,7 +203,7 @@ namespace DrugUserPreventionUI.Pages
         {
             try
             {
-                var response = await client.GetAsync($"{CATEGORIES_API_URL}?pageSize=8");
+                var response = await client.GetAsync($"{_apiConfig.CategoriesApiUrl}?pageSize=8");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();

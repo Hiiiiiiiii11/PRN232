@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 using System.Net.Http.Json;
 using DrugUserPreventionUI.Models;
 
@@ -8,7 +9,13 @@ namespace DrugUserPreventionUI.Pages.ManageProgram
     public class ManageProgramsModel : PageModel
     {
         private readonly IHttpClientFactory _clientFactory;
-        private const string API_BASE_URL = "https://localhost:7045";
+        private readonly ApiConfiguration _apiConfig;
+
+        public ManageProgramsModel(IHttpClientFactory clientFactory, ApiConfiguration apiConfig)
+        {
+            _clientFactory = clientFactory;
+            _apiConfig = apiConfig;
+        }
         public List<ProgramDto> Programs { get; set; } = new();
 
         [BindProperty]
@@ -28,7 +35,7 @@ namespace DrugUserPreventionUI.Pages.ManageProgram
         public async Task OnGetAsync()
         {
             var client = _clientFactory.CreateClient("Api");
-            Programs = await client.GetFromJsonAsync<List<ProgramDto>>($"{API_BASE_URL}/api/Programs") ?? new();
+            Programs = await client.GetFromJsonAsync<List<ProgramDto>>($"{_apiConfig.BaseUrl}/api/Programs") ?? new();
         }
 
         public async Task<IActionResult> OnPostSaveAsync()
@@ -47,9 +54,9 @@ namespace DrugUserPreventionUI.Pages.ManageProgram
 
             HttpResponseMessage response;
             if (Input.ProgramID > 0)
-                response = await client.PutAsJsonAsync($"{API_BASE_URL}/api/Programs/{Input.ProgramID}", Input);
+                response = await client.PutAsJsonAsync($"{_apiConfig.BaseUrl}/api/Programs/{Input.ProgramID}", Input);
             else
-                response = await client.PostAsJsonAsync($"{API_BASE_URL}/api/Programs", Input);
+                response = await client.PostAsJsonAsync($"{_apiConfig.BaseUrl}/api/Programs", Input);
 
             if (response.IsSuccessStatusCode)
                 SuccessMessage = "Lưu thành công!";
@@ -63,7 +70,7 @@ namespace DrugUserPreventionUI.Pages.ManageProgram
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
             var client = _clientFactory.CreateClient("Api");
-            var response = await client.DeleteAsync($"{API_BASE_URL}/api/Programs/{id}");
+            var response = await client.DeleteAsync($"{_apiConfig.BaseUrl}/api/Programs/{id}");
 
             if (response.IsSuccessStatusCode)
                 SuccessMessage = "Xóa chương trình thành công!";

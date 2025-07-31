@@ -4,18 +4,19 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages.ManagerDashboard
 {
     public class ManagerDashboardModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string ADMIN_API_URL = "https://localhost:7045/api/Admin";
-        private const string COURSES_API_URL = "https://localhost:7045/api/Courses";
+        private readonly ApiConfiguration _apiConfig;
 
-        public ManagerDashboardModel(IHttpClientFactory httpClientFactory)
+        public ManagerDashboardModel(IHttpClientFactory httpClientFactory, ApiConfiguration apiConfig)
         {
             _httpClientFactory = httpClientFactory;
+            _apiConfig = apiConfig;
         }
 
         public List<UserResponse> Consultants { get; set; } = new List<UserResponse>();
@@ -176,7 +177,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
                 var json = JsonSerializer.Serialize(isAccept);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PatchAsync($"{COURSES_API_URL}/{id}/approve", content);
+                var response = await client.PatchAsync($"{_apiConfig.CoursesApiUrl}/{id}/approve", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -247,7 +248,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{ADMIN_API_URL}/ban/{id}", null);
+                var response = await client.PostAsync($"{_apiConfig.AdminApiUrl}/ban/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -317,7 +318,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{ADMIN_API_URL}/unban/{id}", null);
+                var response = await client.PostAsync($"{_apiConfig.AdminApiUrl}/unban/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -410,7 +411,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
                 );
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PutAsync($"{ADMIN_API_URL}/update", content);
+                var response = await client.PutAsync($"{_apiConfig.AdminApiUrl}/update", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -479,7 +480,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
                 );
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync($"{ADMIN_API_URL}/change-password", content);
+                var response = await client.PostAsync($"{_apiConfig.AdminApiUrl}/change-password", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -556,7 +557,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{ADMIN_API_URL}/statistics");
+                var response = await client.GetAsync($"{_apiConfig.AdminApiUrl}/statistics");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -576,7 +577,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{COURSES_API_URL}/statistics");
+                var response = await client.GetAsync($"{_apiConfig.CoursesApiUrl}/statistics");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -598,7 +599,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
                 // Get courses with isAccept = false
                 var queryString = $"?isAccept=false&pageIndex=1&pageSize={maxItems ?? 50}";
 
-                var response = await client.GetAsync($"{COURSES_API_URL}{queryString}");
+                var response = await client.GetAsync($"{_apiConfig.CoursesApiUrl}{queryString}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -617,7 +618,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{ADMIN_API_URL}/role/Consultant");
+                var response = await client.GetAsync($"{_apiConfig.AdminApiUrl}/role/Consultant");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -640,7 +641,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{ADMIN_API_URL}/{id}");
+                var response = await client.GetAsync($"{_apiConfig.AdminApiUrl}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -660,7 +661,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{COURSES_API_URL}/{id}");
+                var response = await client.GetAsync($"{_apiConfig.CoursesApiUrl}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -697,7 +698,7 @@ namespace DrugUserPreventionUI.Pages.ManagerDashboard
             try
             {
                 var currentUserId = GetCurrentUserId();
-                var response = await client.GetAsync($"{ADMIN_API_URL}/{currentUserId}");
+                var response = await client.GetAsync($"{_apiConfig.AdminApiUrl}/{currentUserId}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<

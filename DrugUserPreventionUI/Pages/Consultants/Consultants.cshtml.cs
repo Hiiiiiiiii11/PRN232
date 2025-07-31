@@ -5,6 +5,7 @@ using DrugUserPreventionUI.Models.Consultants;
 using DrugUserPreventionUI.Models.Courses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages.Consultants
 {
@@ -12,15 +13,17 @@ namespace DrugUserPreventionUI.Pages.Consultants
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<ConsultantsModel> _logger;
-        private const string BASE_API_URL = "https://localhost:7045/api/ConsultantUser";
+        private readonly ApiConfiguration _apiConfig;
 
         public ConsultantsModel(
             IHttpClientFactory httpClientFactory,
-            ILogger<ConsultantsModel> logger
+            ILogger<ConsultantsModel> logger,
+            ApiConfiguration apiConfig
         )
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _apiConfig = apiConfig;
         }
 
         // JSON Options for consistent deserialization
@@ -212,7 +215,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
 
                 // Call appointment API
                 var response = await client.PostAsync(
-                    "https://localhost:7045/api/Appointment/create",
+                    $"{_apiConfig.AppointmentApiUrl}/create",
                     content
                 );
 
@@ -360,8 +363,8 @@ namespace DrugUserPreventionUI.Pages.Consultants
 
                 // Use admin endpoint if user is admin, otherwise use public endpoint
                 var endpoint = IsAdminUser
-                    ? $"{BASE_API_URL}/admin{queryString}"
-                    : $"{BASE_API_URL}{queryString}";
+                    ? $"{_apiConfig.ConsultantApiUrl}/admin{queryString}"
+                    : $"{_apiConfig.ConsultantApiUrl}{queryString}";
                 var httpClient = IsAdminUser ? GetAuthenticatedClient() : client;
 
                 _logger.LogInformation("Calling API endpoint: {Endpoint}", endpoint);
@@ -450,7 +453,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/{id}");
+                var response = await client.GetAsync($"{_apiConfig.ConsultantApiUrl}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -496,7 +499,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
                 var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
 
                 var response = await client.GetAsync(
-                    $"{BASE_API_URL}/{consultantId}/courses{queryString}"
+                    $"{_apiConfig.ConsultantApiUrl}/{consultantId}/courses{queryString}"
                 );
                 if (response.IsSuccessStatusCode)
                 {
@@ -544,7 +547,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
 
                 var queryString = "?" + string.Join("&", queryParams);
 
-                var response = await client.GetAsync($"{BASE_API_URL}/specialty{queryString}");
+                var response = await client.GetAsync($"{_apiConfig.ConsultantApiUrl}/specialty{queryString}");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -592,7 +595,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
 
                 var queryString = "?" + string.Join("&", queryParams);
 
-                var response = await client.GetAsync($"{BASE_API_URL}/search{queryString}");
+                var response = await client.GetAsync($"{_apiConfig.ConsultantApiUrl}/search{queryString}");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();

@@ -7,6 +7,7 @@ using System.Text.Json;
 using DrugUserPreventionUI.Models.Users;
 using DrugUserPreventionUI.Models.Common;
 using DrugUserPreventionUI.Helper;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages
 {
@@ -14,11 +15,13 @@ namespace DrugUserPreventionUI.Pages
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IWebHostEnvironment _environment;
+        private readonly ApiConfiguration _apiConfig;
 
-        public ProfileModel(IHttpClientFactory httpClientFactory, IWebHostEnvironment environment)
+        public ProfileModel(IHttpClientFactory httpClientFactory, IWebHostEnvironment environment, ApiConfiguration apiConfig)
         {
             _httpClientFactory = httpClientFactory;
             _environment = environment;
+            _apiConfig = apiConfig;
             
             // Initialize forms to prevent null reference
             ProfileForm = new ProfileFormModel();
@@ -125,7 +128,7 @@ namespace DrugUserPreventionUI.Pages
                 };
 
                 var userId = GetCurrentUserId();
-                var apiUrl = $"https://localhost:7045/api/User/{userId}";
+                var apiUrl = $"{_apiConfig.UserApiUrl}/{userId}";
                 
                 // Debug info
                 System.Diagnostics.Debug.WriteLine($"Update API URL: {apiUrl}");
@@ -236,7 +239,7 @@ namespace DrugUserPreventionUI.Pages
                 };
 
                 var userId = GetCurrentUserId();
-                var response = await client.PostAsJsonAsync($"https://localhost:7045/api/User/{userId}/change-password", changePasswordRequest);
+                var response = await client.PostAsJsonAsync($"{_apiConfig.UserApiUrl}/{userId}/change-password", changePasswordRequest);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -318,7 +321,7 @@ namespace DrugUserPreventionUI.Pages
 
                 var updateRequest = new { AvatarUrl = avatarUrl };
                 var userId = GetCurrentUserId();
-                var response = await client.PutAsJsonAsync($"https://localhost:7045/api/User/{userId}/avatar", updateRequest);
+                var response = await client.PutAsJsonAsync($"{_apiConfig.UserApiUrl}/{userId}/avatar", updateRequest);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -363,13 +366,28 @@ namespace DrugUserPreventionUI.Pages
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 var userId = GetCurrentUserId();
-                var apiUrl = $"https://localhost:7045/api/User/{userId}";
+                var apiUrl = $"{_apiConfig.UserApiUrl}/{userId}";
                 
                 // Debug info
-                System.Diagnostics.Debug.WriteLine($"Profile API Call: {apiUrl}");
+                System.Diagnostics.Debug.WriteLine($"=== Profile LoadUserDataAsync Debug ===");
+                System.Diagnostics.Debug.WriteLine($"API URL: {apiUrl}");
                 System.Diagnostics.Debug.WriteLine($"User ID: {userId}");
+                System.Diagnostics.Debug.WriteLine($"Token exists: {!string.IsNullOrEmpty(token)}");
+                System.Diagnostics.Debug.WriteLine($"Token length: {token?.Length ?? 0}");
+                
+                // Debug session info
+                var sessionUserId = HttpContext.Session.GetString("user_id");
+                var sessionUserName = HttpContext.Session.GetString("user_name");
+                var sessionUserRole = HttpContext.Session.GetString("user_role");
+                System.Diagnostics.Debug.WriteLine($"Session user_id: {sessionUserId}");
+                System.Diagnostics.Debug.WriteLine($"Session user_name: {sessionUserName}");
+                System.Diagnostics.Debug.WriteLine($"Session user_role: {sessionUserRole}");
                 
                 var response = await client.GetAsync(apiUrl);
+                
+                System.Diagnostics.Debug.WriteLine($"API Response Status: {response.StatusCode}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"API Response Content: {responseContent}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -596,8 +614,8 @@ namespace DrugUserPreventionUI.Pages
                 var userId = GetCurrentUserId();
                 
                 // Load course stats
-                var courseResponse = await client.GetAsync($"https://localhost:7045/api/Course/user/{userId}/stats");
-                var appointmentResponse = await client.GetAsync($"https://localhost:7045/api/Appointment/user/{userId}/stats");
+                var courseResponse = await client.GetAsync($"{_apiConfig.CoursesApiUrl}/user/{userId}/stats");
+                var appointmentResponse = await client.GetAsync($"{_apiConfig.AppointmentApiUrl}/user/{userId}/stats");
 
                 UserStats = new UserStatsModel
                 {

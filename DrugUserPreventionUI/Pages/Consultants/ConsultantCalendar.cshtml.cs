@@ -3,6 +3,7 @@ using DrugUserPreventionUI.Models.Consultants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages.Consultants
 {
@@ -10,12 +11,13 @@ namespace DrugUserPreventionUI.Pages.Consultants
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<ConsultantCalendarModel> _logger;
-        private const string BASE_API_URL = "https://localhost:7045/api";
+        private readonly ApiConfiguration _apiConfig;
 
-        public ConsultantCalendarModel(IHttpClientFactory httpClientFactory, ILogger<ConsultantCalendarModel> logger)
+        public ConsultantCalendarModel(IHttpClientFactory httpClientFactory, ILogger<ConsultantCalendarModel> logger, ApiConfiguration apiConfig)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _apiConfig = apiConfig;
         }
 
         // Properties
@@ -81,7 +83,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
                 };
 
                 var content = new StringContent(JsonSerializer.Serialize(appointmentRequest), System.Text.Encoding.UTF8, "application/json");
-                var response = await client.PostAsync($"{BASE_API_URL}/Appointment/create", content);
+                var response = await client.PostAsync($"{$"{_apiConfig.BaseUrl}/api"}/Appointment/create", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -122,7 +124,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/ConsultantUser/{ConsultantId}");
+                var response = await client.GetAsync($"{$"{_apiConfig.BaseUrl}/api"}/ConsultantUser/{ConsultantId}");
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -146,7 +148,7 @@ namespace DrugUserPreventionUI.Pages.Consultants
             try
             {
                 var weekStartParam = WeekStartDate.ToString("yyyy-MM-dd");
-                var response = await client.GetAsync($"{BASE_API_URL}/ConsultantCalendar/{ConsultantId}/calendar/weekly?weekStartDate={weekStartParam}");
+                var response = await client.GetAsync($"{$"{_apiConfig.BaseUrl}/api"}/ConsultantCalendar/{ConsultantId}/calendar/weekly?weekStartDate={weekStartParam}");
                 
                 if (response.IsSuccessStatusCode)
                 {

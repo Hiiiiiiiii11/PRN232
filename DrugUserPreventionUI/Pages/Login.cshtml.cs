@@ -5,13 +5,13 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages
 {
     public class LoginModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string AUTH_API_URL = "https://localhost:7045";
 
         public LoginModel(IHttpClientFactory httpClientFactory)
         {
@@ -89,7 +89,7 @@ namespace DrugUserPreventionUI.Pages
                 );
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var loginUrl = $"{AUTH_API_URL}/login";
+                var loginUrl = $"{ApiUrlHelper.GetAuthUrl()}/login";
 
                 Console.WriteLine($"=== LOGIN DEBUG ===");
                 Console.WriteLine($"URL: {loginUrl}");

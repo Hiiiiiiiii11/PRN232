@@ -7,17 +7,19 @@ using DrugUserPreventionUI.Models.Tags;
 using DrugUserPreventionUI.Pages;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUsePrevention.Pages.Staff
 {
     public class StaffDashboardModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string BASE_API_URL = "https://localhost:7045/api";
+        private readonly ApiConfiguration _apiConfig;
 
-        public StaffDashboardModel(IHttpClientFactory httpClientFactory)
+        public StaffDashboardModel(IHttpClientFactory httpClientFactory, ApiConfiguration apiConfig)
         {
             _httpClientFactory = httpClientFactory;
+            _apiConfig = apiConfig;
         }
 
         // Properties
@@ -214,7 +216,7 @@ namespace DrugUsePrevention.Pages.Staff
                 );
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync($"{BASE_API_URL}/Admin/create", content);
+                var response = await client.PostAsync($"{_apiConfig.BaseUrl + "/api"}/Admin/create", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -259,7 +261,7 @@ namespace DrugUsePrevention.Pages.Staff
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{BASE_API_URL}/Admin/ban/{id}", null);
+                var response = await client.PostAsync($"{_apiConfig.BaseUrl + "/api"}/Admin/ban/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage(
@@ -299,7 +301,7 @@ namespace DrugUsePrevention.Pages.Staff
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{BASE_API_URL}/Admin/unban/{id}", null);
+                var response = await client.PostAsync($"{_apiConfig.BaseUrl + "/api"}/Admin/unban/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage(
@@ -342,7 +344,7 @@ namespace DrugUsePrevention.Pages.Staff
                 var json = JsonSerializer.Serialize(status);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PatchAsync(
-                    $"{BASE_API_URL}/NewsArticles/{id}/toggle-status",
+                    $"{_apiConfig.BaseUrl + "/api"}/NewsArticles/{id}/toggle-status",
                     content
                 );
 
@@ -379,7 +381,7 @@ namespace DrugUsePrevention.Pages.Staff
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.DeleteAsync($"{BASE_API_URL}/NewsArticles/{id}");
+                var response = await client.DeleteAsync($"{_apiConfig.BaseUrl + "/api"}/NewsArticles/{id}");
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage("news", "Xóa News thành công!", "success");
@@ -432,7 +434,7 @@ namespace DrugUsePrevention.Pages.Staff
                 );
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync($"{BASE_API_URL}/Categories", content);
+                var response = await client.PostAsync($"{_apiConfig.BaseUrl + "/api"}/Categories", content);
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage(
@@ -474,7 +476,7 @@ namespace DrugUsePrevention.Pages.Staff
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.DeleteAsync($"{BASE_API_URL}/Categories/{id}");
+                var response = await client.DeleteAsync($"{_apiConfig.BaseUrl + "/api"}/Categories/{id}");
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage(
@@ -531,7 +533,7 @@ namespace DrugUsePrevention.Pages.Staff
                 );
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync($"{BASE_API_URL}/Tags", content);
+                var response = await client.PostAsync($"{_apiConfig.BaseUrl + "/api"}/Tags", content);
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage("tags", "Tạo Tag thành công!", "success");
@@ -565,7 +567,7 @@ namespace DrugUsePrevention.Pages.Staff
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.DeleteAsync($"{BASE_API_URL}/Tags/{id}");
+                var response = await client.DeleteAsync($"{_apiConfig.BaseUrl + "/api"}/Tags/{id}");
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage("tags", "Xóa Tag thành công!", "success");
@@ -617,7 +619,7 @@ namespace DrugUsePrevention.Pages.Staff
                 );
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PutAsync($"{BASE_API_URL}/Admin/update", content);
+                var response = await client.PutAsync($"{_apiConfig.BaseUrl + "/api"}/Admin/update", content);
 
                 if (response.IsSuccessStatusCode)
                     return SafeRedirectToCurrentPage(
@@ -680,7 +682,7 @@ namespace DrugUsePrevention.Pages.Staff
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync(
-                    $"{BASE_API_URL}/Admin/change-password",
+                    $"{_apiConfig.BaseUrl + "/api"}/Admin/change-password",
                     content
                 );
 
@@ -730,7 +732,7 @@ namespace DrugUsePrevention.Pages.Staff
             try
             {
                 // Load user statistics
-                var userStatsResponse = await client.GetAsync($"{BASE_API_URL}/Admin/statistics");
+                var userStatsResponse = await client.GetAsync($"{_apiConfig.BaseUrl + "/api"}/Admin/statistics");
                 if (userStatsResponse.IsSuccessStatusCode)
                 {
                     var userStatsJson = await userStatsResponse.Content.ReadAsStringAsync();
@@ -748,7 +750,7 @@ namespace DrugUsePrevention.Pages.Staff
                 }
 
                 // Load news statistics
-                var newsStatsResponse = await client.GetAsync($"{BASE_API_URL}/NewsArticles/stats");
+                var newsStatsResponse = await client.GetAsync($"{_apiConfig.BaseUrl + "/api"}/NewsArticles/stats");
                 if (newsStatsResponse.IsSuccessStatusCode)
                 {
                     var newsStatsJson = await newsStatsResponse.Content.ReadAsStringAsync();
@@ -763,7 +765,7 @@ namespace DrugUsePrevention.Pages.Staff
 
                 // Load category statistics
                 var categoryStatsResponse = await client.GetAsync(
-                    $"{BASE_API_URL}/Categories/stats"
+                    $"{_apiConfig.BaseUrl + "/api"}/Categories/stats"
                 );
                 if (categoryStatsResponse.IsSuccessStatusCode)
                 {
@@ -778,7 +780,7 @@ namespace DrugUsePrevention.Pages.Staff
                 }
 
                 // Load tags count
-                var tagsResponse = await client.GetAsync($"{BASE_API_URL}/Tags");
+                var tagsResponse = await client.GetAsync($"{_apiConfig.BaseUrl + "/api"}/Tags");
                 if (tagsResponse.IsSuccessStatusCode)
                 {
                     var tagsJson = await tagsResponse.Content.ReadAsStringAsync();
@@ -801,7 +803,7 @@ namespace DrugUsePrevention.Pages.Staff
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/Admin/role/Member");
+                var response = await client.GetAsync($"{_apiConfig.BaseUrl + "/api"}/Admin/role/Member");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -826,7 +828,7 @@ namespace DrugUsePrevention.Pages.Staff
             {
                 var queryString = $"?pageIndex={pageIndex}&pageSize={pageSize}";
                 var response = await client.GetAsync(
-                    $"{BASE_API_URL}/NewsArticles/admin{queryString}"
+                    $"{_apiConfig.BaseUrl + "/api"}/NewsArticles/admin{queryString}"
                 );
                 if (response.IsSuccessStatusCode)
                 {
@@ -852,7 +854,7 @@ namespace DrugUsePrevention.Pages.Staff
             {
                 var queryString = $"?pageIndex={pageIndex}&pageSize={pageSize}";
                 var response = await client.GetAsync(
-                    $"{BASE_API_URL}/Categories/admin{queryString}"
+                    $"{_apiConfig.BaseUrl + "/api"}/Categories/admin{queryString}"
                 );
                 if (response.IsSuccessStatusCode)
                 {
@@ -877,7 +879,7 @@ namespace DrugUsePrevention.Pages.Staff
             try
             {
                 var queryString = $"?pageIndex={pageIndex}&pageSize={pageSize}";
-                var response = await client.GetAsync($"{BASE_API_URL}/Tags{queryString}");
+                var response = await client.GetAsync($"{_apiConfig.BaseUrl + "/api"}/Tags{queryString}");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();

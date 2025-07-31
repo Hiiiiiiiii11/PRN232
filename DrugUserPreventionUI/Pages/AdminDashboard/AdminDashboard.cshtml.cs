@@ -4,17 +4,19 @@ using System.Text.Json;
 using DrugUserPreventionUI.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DrugUserPreventionUI.Configuration;
 
 namespace DrugUserPreventionUI.Pages.AdminDashboard
 {
     public class AdminDashboardModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string BASE_API_URL = "https://localhost:7045/api/Admin";
+        private readonly ApiConfiguration _apiConfig;
 
-        public AdminDashboardModel(IHttpClientFactory httpClientFactory)
+        public AdminDashboardModel(IHttpClientFactory httpClientFactory, ApiConfiguration apiConfig)
         {
             _httpClientFactory = httpClientFactory;
+            _apiConfig = apiConfig;
         }
 
         public List<UserResponse> Users { get; set; } = new List<UserResponse>();
@@ -177,14 +179,26 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
                 );
             }
 
-            if (!ModelState.IsValid)
-            {
-                var validationErrors = ModelState
-                    .SelectMany(x => x.Value.Errors)
-                    .Select(x => x.ErrorMessage)
-                    .ToList();
+            // Only validate UserForm fields for create user action
+            var createUserErrors = new List<string>();
+            var userFormPrefix = "UserForm.";
 
-                Message = "Dữ liệu không hợp lệ: " + string.Join(", ", validationErrors);
+            foreach (var key in ModelState.Keys.Where(k => k.StartsWith(userFormPrefix)))
+            {
+                var state = ModelState[key];
+                if (state != null && state.Errors.Count > 0)
+                {
+                    foreach (var error in state.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Create User Field Error - {key}: {error.ErrorMessage}");
+                        createUserErrors.Add(error.ErrorMessage);
+                    }
+                }
+            }
+
+            if (createUserErrors.Any())
+            {
+                Message = "Dữ liệu không hợp lệ: " + string.Join(", ", createUserErrors);
                 MessageType = "error";
 
                 await LoadStatistics(GetAuthenticatedClient());
@@ -215,7 +229,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
                 );
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync($"{BASE_API_URL}/create", content);
+                var response = await client.PostAsync($"{_apiConfig.AdminApiUrl}/create", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -287,8 +301,28 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
                 );
             }
 
-            if (!ModelState.IsValid)
+            // Only validate UserForm fields for update user action
+            var updateUserErrors = new List<string>();
+            var userFormPrefix = "UserForm.";
+
+            foreach (var key in ModelState.Keys.Where(k => k.StartsWith(userFormPrefix)))
             {
+                var state = ModelState[key];
+                if (state != null && state.Errors.Count > 0)
+                {
+                    foreach (var error in state.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Update User Field Error - {key}: {error.ErrorMessage}");
+                        updateUserErrors.Add(error.ErrorMessage);
+                    }
+                }
+            }
+
+            if (updateUserErrors.Any())
+            {
+                Message = "Dữ liệu không hợp lệ: " + string.Join(", ", updateUserErrors);
+                MessageType = "error";
+
                 await LoadStatistics(GetAuthenticatedClient());
                 await LoadUsersList(GetAuthenticatedClient(), 1, 10);
                 CurrentAction = "edit";
@@ -321,7 +355,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
                 );
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PutAsync($"{BASE_API_URL}/update", content);
+                var response = await client.PutAsync($"{_apiConfig.AdminApiUrl}/update", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -377,7 +411,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.DeleteAsync($"{BASE_API_URL}/{id}");
+                var response = await client.DeleteAsync($"{_apiConfig.AdminApiUrl}/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -432,7 +466,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{BASE_API_URL}/ban/{id}", null);
+                var response = await client.PostAsync($"{_apiConfig.AdminApiUrl}/ban/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -491,7 +525,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{BASE_API_URL}/unban/{id}", null);
+                var response = await client.PostAsync($"{_apiConfig.AdminApiUrl}/unban/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -550,7 +584,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.PostAsync($"{BASE_API_URL}/verify-email/{id}", null);
+                var response = await client.PostAsync($"{_apiConfig.AdminApiUrl}/verify-email/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -644,7 +678,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
                 var json = JsonSerializer.Serialize(updateRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.PutAsync($"https://localhost:7045/api/User/{currentUser.UserId}", content);
+                var response = await client.PutAsync($"{_apiConfig.UserApiUrl}/{currentUser.UserId}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -693,7 +727,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/statistics");
+                var response = await client.GetAsync($"{_apiConfig.AdminApiUrl}/statistics");
 
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
@@ -733,15 +767,15 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
                 if (!string.IsNullOrEmpty(searchTerm))
                 {
                     url =
-                        $"{BASE_API_URL}/search?name={Uri.EscapeDataString(searchTerm)}&page={pageIndex}&pageSize={pageSize}";
+                        $"{_apiConfig.AdminApiUrl}/search?name={Uri.EscapeDataString(searchTerm)}&page={pageIndex}&pageSize={pageSize}";
                 }
                 else if (!string.IsNullOrEmpty(roleFilter))
                 {
-                    url = $"{BASE_API_URL}/role/{roleFilter}";
+                    url = $"{_apiConfig.AdminApiUrl}/role/{roleFilter}";
                 }
                 else
                 {
-                    url = $"{BASE_API_URL}/search?page={pageIndex}&pageSize={pageSize}";
+                    url = $"{_apiConfig.AdminApiUrl}/search?page={pageIndex}&pageSize={pageSize}";
                 }
 
                 var response = await client.GetAsync(url);
@@ -813,7 +847,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/{id}");
+                var response = await client.GetAsync($"{_apiConfig.AdminApiUrl}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -839,7 +873,7 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
         {
             try
             {
-                var response = await client.GetAsync($"{BASE_API_URL}/{id}");
+                var response = await client.GetAsync($"{_apiConfig.AdminApiUrl}/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<
@@ -894,8 +928,9 @@ namespace DrugUserPreventionUI.Pages.AdminDashboard
         [EmailAddress(ErrorMessage = "Email không hợp lệ")]
         public string Email { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
         [StringLength(255, MinimumLength = 6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
-        public string? Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
         public string? Phone { get; set; }

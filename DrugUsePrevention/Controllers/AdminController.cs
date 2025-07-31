@@ -369,7 +369,7 @@ namespace DrugUsePrevention.Controllers
         //}
 
         [HttpPost("change-password")]
-        public async Task<IActionResult> ChangeUserPassword([FromBody] ChangePasswordRequest request)
+        public async Task<IActionResult> ChangeUserPassword([FromBody] AdminChangePasswordRequest request)
         {
             try
             {
